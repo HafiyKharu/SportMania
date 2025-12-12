@@ -1,84 +1,55 @@
-﻿@{
+﻿@model IEnumerable<SportMania.Models.Plan>
+@{
     ViewData["Title"] = "Home";
 }
 
 <section class="hero text-center py-5">
     <div class="container">
-        <div class="badge bg-dark-subtle text-secondary mb-3">Mock Mode</div>
         <h1 class="display-5 fw-bold text-gradient">Stream Your Favorite <br />Content Anytime</h1>
         <p class="lead text-secondary mt-3 mx-auto" style="max-width: 760px;">
-            Get unlimited access to thousands of movies, series, and exclusive content. Choose a plan that fits your lifestyle and start streaming today.
+            Get unlimited access to thousands of movies, series, and exclusive content. Choose a plan that fits your
+            lifestyle and start streaming today.
         </p>
     </div>
 </section>
 
 <section class="pricing py-4">
     <div class="container">
-        <h2 class="h4 text-center text-light mb-4">Choose Your Plan</h2>
-
+        <div class="row text-center">
+            <div class="col-12 mb-4 d-flex justify-content-center align-items-center gap-2">
+                <h2 class="h4 text-light mb-0">Choose Your Plan</h2>
+                <div class="badge bg-dark-subtle text-secondary text-black">Mock Mode</div>
+            </div>
+        </div>
         <div class="row g-4 justify-content-center">
-            <!-- Weekly Pass -->
-            <div class="col-12 col-md-4">
-                <div class="pricing-card h-100">
-                    <div class="pricing-card-header d-flex align-items-center gap-2">
-                        <span class="icon icon-bolt"></span>
-                        <span>Weekly Pass</span>
+            @foreach (var plan in Model)
+            {
+                <div class="col-12 col-md-4">
+                    <div
+                        class="pricing-card h-100 @(plan.Name.Contains("Monthly", StringComparison.OrdinalIgnoreCase) ? "featured" : "")">
+                        @if (plan.Name.Contains("Monthly", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <div class="badge badge-most-popular">Most Popular</div>
+                        }
+                        <div class="pricing-card-header text-center d-flex flex-column align-items-center">
+                            <img src="@plan.ImageUrl" alt="@plan.Name" class="rounded mb-2"
+                                style="width:40px;height:40px;object-fit:cover;" />
+                            <span class="h4 fw-semibold">@plan.Name</span>
+                        </div>
+                        <div class="h6 text-secondary text-center mb-3">@plan.Description</div>
+                        <div class="price text-center">
+                            <span class="amount">@plan.Price</span><span class="period">/@plan.Duration</span>
+                        </div>
+                        <ul class="list-unstyled mt-3 mb-4 text-secondary">
+                            @foreach (var d in plan.Details)
+                            {
+                                <li>✅ @d.Value</li>
+                            }
+                        </ul>
+                        <a class="btn btn-accent w-100" asp-controller="Home" asp-action="Index">Subscribe Now</a>
                     </div>
-                    <div class="text-secondary small mb-3">Access all content for 7 days</div>
-                    <div class="price">
-                        <span class="amount">RM3.00</span><span class="period">/week</span>
-                    </div>
-                    <ul class="list-unstyled mt-3 mb-4 text-secondary">
-                        <li>7 days of full access</li>
-                        <li>HD streaming</li>
-                        <li>Cancel anytime</li>
-                    </ul>
-                    <a class="btn btn-accent w-100" asp-controller="Home" asp-action="Plan">Subscribe Now</a>
                 </div>
-            </div>
-
-            <!-- Monthly Plan (Most Popular) -->
-            <div class="col-12 col-md-4">
-                <div class="pricing-card h-100 featured">
-                    <div class="badge badge-most-popular">Most Popular</div>
-                    <div class="pricing-card-header d-flex align-items-center gap-2">
-                        <span class="icon icon-star"></span>
-                        <span>Monthly Plan</span>
-                    </div>
-                    <div class="text-secondary small mb-3">Full access for 30 days</div>
-                    <div class="price">
-                        <span class="amount">RM10.00</span><span class="period">/month</span>
-                    </div>
-                    <ul class="list-unstyled mt-3 mb-4 text-secondary">
-                        <li>30 days of full access</li>
-                        <li>HD & 4K streaming</li>
-                        <li>Download for offline</li>
-                        <li>Cancel anytime</li>
-                    </ul>
-                    <a class="btn btn-accent w-100" asp-controller="Home" asp-action="Plan">Subscribe Now</a>
-                </div>
-            </div>
-
-            <!-- Season Pass -->
-            <div class="col-12 col-md-4">
-                <div class="pricing-card h-100">
-                    <div class="pricing-card-header d-flex align-items-center gap-2">
-                        <span class="icon icon-crown"></span>
-                        <span>Season Pass</span>
-                    </div>
-                    <div class="text-secondary small mb-3">Premium access for the entire season</div>
-                    <div class="price">
-                        <span class="amount">RM60.00</span><span class="period">/season</span>
-                    </div>
-                    <ul class="list-unstyled mt-3 mb-4 text-secondary">
-                        <li>Full season access</li>
-                        <li>4K Ultra HD</li>
-                        <li>Priority support</li>
-                        <li>Exclusive content</li>
-                    </ul>
-                    <a class="btn btn-accent w-100" asp-controller="Home" asp-action="Plan">Subscribe Now</a>
-                </div>
-            </div>
+            }
         </div>
     </div>
 </section>

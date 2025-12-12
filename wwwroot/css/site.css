@@ -116,3 +116,4 @@ body.theme-dark {
 .icon-bolt { background: linear-gradient(135deg, #16a34a, #22c55e); }
 .icon-star { background: linear-gradient(135deg, #22c55e, #86efac); }
 .icon-crown { background: linear-gradient(135deg, #16a34a, #166534); }
+.pricing-card .pricing-card-header + .text-secondary { text-align: center; }
