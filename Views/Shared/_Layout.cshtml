@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -10,27 +11,21 @@
     <link rel="stylesheet" href="~/SportMania.styles.css" asp-append-version="true" />
 </head>
 <body class="theme-dark">
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-dark bg-black border-bottom-0 mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand text-accent" asp-area="" asp-controller="Home" asp-action="Index">SportMania</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-light" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
+    <header class="sticky-top w-100 bg-black">
+        <div class="container d-flex align-items-center justify-content-between py-2">
+            <a asp-area="" asp-controller="Home" asp-action="Index" class="d-flex align-items-center gap-2 text-decoration-none">
+                <div class="d-flex align-items-center justify-content-center rounded bg-primary" style="width:36px;height:36px;">
+                    <!-- Play icon (SVG) -->
+                    <svg class="text-dark" style="width:20px;height:20px;fill:currentColor;" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M8 5v14l11-7-11-7z"></path>
+                    </svg>
                 </div>
-            </div>
-        </nav>
+                <span class="fs-5 fw-bold text-white">StreamFlix</span>
+            </a>
+            <ul class="navbar-nav">
+                <partial name="_LoginPartial" />
+            </ul>
+        </div>
     </header>
     <div class="container-xl">
         <main role="main" class="pb-3">
@@ -40,7 +35,7 @@
 
     <footer class="border-top-0 footer text-muted bg-black">
         <div class="container-xl small text-secondary">
-            &copy; 2025 - SportMania - <a class="text-light" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            Powered by ToyyibPay - A secure Malaysian payment gateway<a class="text-light" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
