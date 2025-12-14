@@ -10,6 +10,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
+    public DbSet<PlanDetails> PlanDetails => Set<PlanDetails>();
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -49,8 +50,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder); // Call base method first
+
         // Set default schema for all tables
         modelBuilder.HasDefaultSchema("SportMania");
+
+        // Configure the one-to-many relationship between Plan and Details
+        modelBuilder.Entity<Plan>()
+            .HasMany(p => p.Details)
+            .WithOne(d => d.Plan)
+            .HasForeignKey(d => d.PlanId)
+            .OnDelete(DeleteBehavior.Cascade); // This is correct
 
         // Global query filters (soft delete)
         modelBuilder.Entity<Customer>().HasQueryFilter(c => !c.IsDeleted);
@@ -76,13 +86,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             b.ToTable("TransactionKeys");
         });
 
-        modelBuilder.Entity<Plan>().OwnsMany(p => p.Details, b =>
-        {
-            b.WithOwner().HasForeignKey("PlanId");
-            b.HasKey(d => d.Id);
-            b.Property(d => d.Value).HasMaxLength(256);
-            b.ToTable("PlanDetails");
-        });
+        // REMOVED: The conflicting OwnsMany configuration for PlanDetails
+        // modelBuilder.Entity<Plan>().OwnsMany(p => p.Details, ...);
 
         // --- Seed Plans + Details ---
         var weeklyId  = Guid.Parse("3f2c8d3e-7f22-4e54-9c2b-4a8b9d5a1a11");
@@ -133,24 +138,23 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             }
         );
 
-        modelBuilder.Entity<Plan>().OwnsMany(p => p.Details).HasData(
+        // CORRECTED: Seed PlanDetails as its own entity
+        modelBuilder.Entity<PlanDetails>().HasData(
             // Weekly details
-            new { Id = Guid.Parse("c1b9d1c0-2d4d-4d3b-9f3e-b5bd6f5f0001"), PlanId = weeklyId,  Value = "7 days of full access" },
-            new { Id = Guid.Parse("c1b9d1c0-2d4d-4d3b-9f3e-b5bd6f5f0002"), PlanId = weeklyId,  Value = "HD streaming" },
-            new { Id = Guid.Parse("c1b9d1c0-2d4d-4d3b-9f3e-b5bd6f5f0003"), PlanId = weeklyId,  Value = "Cancel anytime" },
+            new { PlanDetailsId = Guid.Parse("c1b9d1c0-2d4d-4d3b-9f3e-b5bd6f5f0001"), PlanId = weeklyId,  Value = "7 days of full access" },
+            new { PlanDetailsId = Guid.Parse("c1b9d1c0-2d4d-4d3b-9f3e-b5bd6f5f0002"), PlanId = weeklyId,  Value = "HD streaming" },
+            new { PlanDetailsId = Guid.Parse("c1b9d1c0-2d4d-4d3b-9f3e-b5bd6f5f0003"), PlanId = weeklyId,  Value = "Cancel anytime" },
 
-            // Monthly details (fixed GUIDs)
-            new { Id = Guid.Parse("d2c0e2d1-3e5e-4e4c-af4f-c6ce7e6e0001"), PlanId = monthlyId, Value = "30 days of full access" },
-            new { Id = Guid.Parse("d2c0e2d1-3e5e-4e4c-af4f-c6ce7e6e0002"), PlanId = monthlyId, Value = "HD & 4K streaming" },
-            new { Id = Guid.Parse("d2c0e2d1-3e5e-4e4c-af4f-c6ce7e6e0003"), PlanId = monthlyId, Value = "Download for offline" },
+            // Monthly details
+            new { PlanDetailsId = Guid.Parse("d2c0e2d1-3e5e-4e4c-af4f-c6ce7e6e0001"), PlanId = monthlyId, Value = "30 days of full access" },
+            new { PlanDetailsId = Guid.Parse("d2c0e2d1-3e5e-4e4c-af4f-c6ce7e6e0002"), PlanId = monthlyId, Value = "HD & 4K streaming" },
+            new { PlanDetailsId = Guid.Parse("d2c0e2d1-3e5e-4e4c-af4f-c6ce7e6e0003"), PlanId = monthlyId, Value = "Download for offline" },
 
-            // Season details (fixed GUIDs)
-            new { Id = Guid.Parse("e3d1f3e2-4f6f-5f5d-b05a-d7df8e7e0001"), PlanId = seasonId,  Value = "4K Ultra HD" },
-            new { Id = Guid.Parse("e3d1f3e2-4f6f-5f5d-b05a-d7df8e7e0002"), PlanId = seasonId,  Value = "Priority support" },
-            new { Id = Guid.Parse("e3d1f3e2-4f6f-5f5d-b05a-d7df8e7e0003"), PlanId = seasonId,  Value = "Exclusive content" },
-            new { Id = Guid.Parse("e3d1f3e2-4f6f-5f5d-b05a-d7df8e7e0004"), PlanId = seasonId,  Value = "Early releases" }
+            // Season details
+            new { PlanDetailsId = Guid.Parse("e3d1f3e2-4f6f-5f5d-b05a-d7df8e7e0001"), PlanId = seasonId,  Value = "4K Ultra HD" },
+            new { PlanDetailsId = Guid.Parse("e3d1f3e2-4f6f-5f5d-b05a-d7df8e7e0002"), PlanId = seasonId,  Value = "Priority support" },
+            new { PlanDetailsId = Guid.Parse("e3d1f3e2-4f6f-5f5d-b05a-d7df8e7e0003"), PlanId = seasonId,  Value = "Exclusive content" },
+            new { PlanDetailsId = Guid.Parse("e3d1f3e2-4f6f-5f5d-b05a-d7df8e7e0004"), PlanId = seasonId,  Value = "Early releases" }
         );
-
-        base.OnModelCreating(modelBuilder);
     }
 }

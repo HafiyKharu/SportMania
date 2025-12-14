@@ -10,16 +10,9 @@ public class Plan : IHasAuditTimestamps
     public string Description { get; set; } = string.Empty;
     public string Price { get; set; } = string.Empty;
     public string Duration { get; set; } = string.Empty;
-    public List<Details> Details { get; set; } = new List<Details>();
+    public virtual List<PlanDetails> Details { get; set; } = new List<PlanDetails>();
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
     public bool IsDeleted { get; set; }
-    
-}
-
-public class Details
-{
-    public Guid Id { get; set; }
-    public string Value { get; set; } = string.Empty;
 }
