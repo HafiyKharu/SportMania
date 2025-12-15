@@ -63,7 +63,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .OnDelete(DeleteBehavior.Cascade); // This is correct
 
         // Global query filters (soft delete)
-        modelBuilder.Entity<Customer>().HasQueryFilter(c => !c.IsDeleted);
         modelBuilder.Entity<Plan>().HasQueryFilter(p => !p.IsDeleted);
         modelBuilder.Entity<Transaction>().HasQueryFilter(t => !t.IsDeleted);
 
