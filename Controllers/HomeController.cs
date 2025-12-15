@@ -1,21 +1,24 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using SportMania.Data;
 using SportMania.Models;
-using SportMania.Repository.Interface;
 
 namespace SportMania.Controllers;
 
 public class HomeController : Controller
 {
-    private readonly IPlanRepository _planRepository;
-    public HomeController(IPlanRepository planRepository)
-    {
-        _planRepository = planRepository;
-    } 
+    private readonly ApplicationDbContext _db;
+    public HomeController(ApplicationDbContext db) => _db = db;
+
     public async Task<IActionResult> Index()
     {
-        var plans = await _planRepository.GetAllAsync();
+        var plans = await _db.Plans
+            .AsNoTracking()
+            .Include(p => p.Details)
+            .OrderBy(p => p.Name)
+            .ToListAsync();
+
         return View(plans);
     }
 
@@ -23,6 +26,9 @@ public class HomeController : Controller
     {
         return View();
     }
+
+    // Keep Plan page if you still need it
+    public IActionResult Plan() => RedirectToAction(nameof(Index));
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
