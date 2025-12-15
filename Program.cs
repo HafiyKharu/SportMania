@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using SportMania.Data;
 using SportMania.Repository.Interface;
 using SportMania.Repository;
+using SportMania.Services.Interface;
+using SportMania.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,8 +17,13 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
 builder.Services.AddControllersWithViews();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 builder.Services.AddScoped<IPlanDetailsRepository, PlanDetailsRepository>();
+builder.Services.AddScoped<IKeyService, KeyService>();
+// Assuming you have a KeyRepository, if not, you'll need to create it.
+// builder.Services.AddScoped<IKeyRepository, KeyRepository>();
 
 var app = builder.Build();
 

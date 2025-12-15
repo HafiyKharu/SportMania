@@ -68,10 +68,10 @@
                         </div>
 
                         <div class="card-footer text-muted bg-transparent border-0 py-4">
-                            <a class="btn w-100 @(isPopular ? "btn-primary" : "btn-secondary")"
-                               asp-controller="Home" asp-action="Index">
+                            <button class="btn w-100 @(isPopular ? "btn-primary" : "btn-secondary")"
+                                    data-bs-toggle="modal" data-bs-target="#emailModal" data-plan-id="@plan.PlanId" data-plan-name="@plan.Name">
                                 Subscribe Now
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -79,3 +79,28 @@
         </div>
     </div>
 </section>
+
+<!-- Email Modal -->
+<div class="modal fade" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="emailModalLabel">Subscribe to <span id="planName"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Transaction" asp-action="InitiatePayment" method="post">
+                <div class="modal-body">
+                    <input type="hidden" id="planId" name="PlanId" />
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email address</label>
+                        <input type="email" class="form-control" id="email" name="Email" placeholder="you@example.com" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Proceed to Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
