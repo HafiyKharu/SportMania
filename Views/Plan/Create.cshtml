@@ -1,8 +1,17 @@
 @model SportMania.Models.Plan
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
 
-<h2>Create New Plan</h2>
-
-<form asp-action="Create" method="post">
+@if (!SignInManager.IsSignedIn(User))
+{
+    <div class="alert alert-warning text-center" role="alert">
+        Please <a asp-area="Identity" asp-page="/Account/Login" class="alert-link">log in</a> to create a new plan.
+    </div>
+}
+else
+{
+    <h2>Create New Plan</h2>
+    <form asp-action="Create" method="post">
     <div class="form-group">
         <label asp-for="Name" class="control-label"></label>
         <input asp-for="Name" class="form-control" />
@@ -88,6 +97,10 @@
         <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
     </div>
 </form>
+}
+
+
+
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}

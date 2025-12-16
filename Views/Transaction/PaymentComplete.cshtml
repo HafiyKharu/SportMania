@@ -3,22 +3,42 @@
     ViewData["Title"] = "Payment Successful";
 }
 
-<div class="container text-center py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card bg-black text-white shadow-sm">
-                <div class="card-body">
-                    <h1 class="card-title text-success">Payment Successful!</h1>
-                    <p class="lead">Thank you for your purchase. Your transaction has been completed successfully.</p>
-                    <hr>
-                    <p>Here is your key to access the Discord server:</p>
-                    <div class="alert alert-info">
-                        <strong>@Model.Key.Code</strong>
+@if (Model != null)
+{
+    <div class="container text-center py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card bg-black text-white shadow-sm">
+                    <div class="card-body">
+                        <h1 class="card-title text-success">Payment Successful!</h1>
+                        <p class="lead">Thank you for your purchase. Your transaction has been completed successfully.</p>
+                        <hr>
+                        <p>Here is your key to access the Discord server:</p>
+                        <div class="alert alert-info">
+                            <strong>@Model.Key.Code</strong>
+                        </div>
+                        <p class="text-white small">Please save this key. You will need it to get your role in our Discord server.</p>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">Back to Home</a>
                     </div>
-                    <p class="text-white small">Please save this key. You will need it to get your role in our Discord server.</p>
-                    <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">Back to Home</a>
                 </div>
             </div>
         </div>
     </div>
-</div>
+}
+else
+{
+    <div class="container text-center py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card bg-black text-white shadow-sm">
+                    <div class="card-body">
+                        <h1 class="card-title text-danger">Transaction Not Found</h1>
+                        <p class="lead">We could not find the transaction details. Please contact support if you believe this is an error.</p>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">Back to Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
