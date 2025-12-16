@@ -11,6 +11,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Plan> Plans => Set<Plan>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<PlanDetails> PlanDetails => Set<PlanDetails>();
+    public DbSet<Key> Keys => Set<Key>();
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
