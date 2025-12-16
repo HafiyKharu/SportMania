@@ -6,11 +6,11 @@
 <div class="container py-5">
     <h1 class="mb-4">Transaction History</h1>
 
-    <div class="card">
+    <div class="card bg-dark text-white">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="thead-dark">
+                <table class="table table-dark table-striped table-hover">
+                    <thead>
                         <tr>
                             <th>Transaction ID</th>
                             <th>Customer Email</th>
@@ -30,7 +30,7 @@
                                     <td><small>@transaction.TransactionId</small></td>
                                     <td>@transaction.Customer.Email</td>
                                     <td>@transaction.Plan.Name</td>
-                                    <td>$@transaction.Amount</td>
+                                    <td>@transaction.Amount</td>
                                     <td>
                                         <span class="badge @(transaction.PaymentStatus == "Success" ? "bg-success" : (transaction.PaymentStatus == "Pending" ? "bg-warning text-dark" : "bg-danger"))">
                                             @transaction.PaymentStatus
