@@ -15,9 +15,3 @@ public class Transaction : IHasAuditTimestamps
     public DateTime? DeletedAt { get; set; }
     public bool IsDeleted { get; set; }
 }
-public class Key
-{
-    public Guid KeyId { get; set; }
-    public string Code { get; set; } = string.Empty;
-    public bool IsRedeemed { get; set; }
-}

@@ -77,13 +77,10 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .OnDelete(DeleteBehavior.Restrict);
 
-        // Owned types
-        modelBuilder.Entity<Transaction>().OwnsOne(t => t.Key, b =>
-        {
-            b.WithOwner().HasForeignKey("TransactionId");
-            b.Property(k => k.Code).HasMaxLength(100);
-            b.ToTable("TransactionKeys");
-        });
+        modelBuilder.Entity<Transaction>()
+            .HasOne(t => t.Key)
+            .WithMany()
+            .OnDelete(DeleteBehavior.Restrict);
 
         // REMOVED: The conflicting OwnsMany configuration for PlanDetails
         // modelBuilder.Entity<Plan>().OwnsMany(p => p.Details, ...);
