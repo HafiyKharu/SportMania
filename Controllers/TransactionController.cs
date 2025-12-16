@@ -2,22 +2,14 @@ using Microsoft.AspNetCore.Mvc;
 using SportMania.Models;
 using SportMania.Repository.Interface;
 using SportMania.Services.Interface;
-using System;
-using System.Threading.Tasks;
-
-// A simple ViewModel to capture user input
-public class TransactionInitiationViewModel
-{
-    public Guid PlanId { get; set; }
-    public string Email { get; set; } = string.Empty;
-}
+using SportMania.Models.Requests;
 
 [Route("[controller]")]
 public class TransactionController : Controller
 {
     private readonly ITransactionRepository _transactionRepository;
     private readonly ICustomerRepository _customerRepository;
-    private readonly IPlanRepository _planRepository; // Assuming you have a Plan repository
+    private readonly IPlanRepository _planRepository;
     private readonly IKeyService _keyService;
 
     public TransactionController(
@@ -39,12 +31,13 @@ public class TransactionController : Controller
     public async Task<IActionResult> Create(Guid planId)
     {
         var plan = await _planRepository.GetByIdAsync(planId);
+        var key = await _keyService.GenerateKeyAsync();
         if (plan == null)
         {
             return NotFound("Plan not found.");
         }
 
-        var model = new TransactionInitiationViewModel { PlanId = planId };
+        var model = new RequestTransaction { PlanId = planId };
         // You would have a view that displays plan details and an email input field.
         // For example: return View(model);
         return Ok($"This is the page to enter your email for Plan: {plan.Name}. Submit to /Transaction/InitiatePayment.");
@@ -55,28 +48,24 @@ public class TransactionController : Controller
     /// and the user is redirected to a (mock) payment gateway.
     /// </summary>
     [HttpPost("InitiatePayment")]
-    public async Task<IActionResult> InitiatePayment([FromForm] TransactionInitiationViewModel model)
+    public async Task<IActionResult> InitiatePayment([FromForm] RequestTransaction req)
     {
-        if (!ModelState.IsValid)
-        {
-            // Return to the form with validation errors
-            // For example: return View("Create", model);
-            return BadRequest(ModelState);
-        }
+        if (!ModelState.IsValid){ return BadRequest(ModelState);}
 
-        // Find or create the customer by email
-        var customer = await _customerRepository.GetCustomerByEmailAsync(model.Email)
-                       ?? await _customerRepository.CreateCustomerAsync(new Customer { Email = model.Email });
+        var customer = await _customerRepository.GetCustomerByEmailAsync(req.Email)
+                       ?? await _customerRepository.CreateCustomerAsync(new Customer { Email = req.Email });
 
-        var plan = await _planRepository.GetByIdAsync(model.PlanId);
+        var plan = await _planRepository.GetByIdAsync(req.PlanId);
         if (plan == null) return NotFound("Plan not found.");
+        Key key = await _keyService.GenerateKeyAsync();
 
         // Create a pending transaction before sending to payment gateway
         var transaction = new Transaction
         {
             Customer = customer,
             Plan = plan,
-            Amount = plan.Price.ToString(), // Assuming Plan has a Price property
+            Amount = plan.Price.ToString(),
+            Key = key,
             PaymentStatus = "Pending",
         };
 
@@ -85,7 +74,7 @@ public class TransactionController : Controller
         // TODO: Redirect to the actual payment gateway with transaction details.
         // The return URL for the gateway should point to our PaymentCallback action.
         // For now, we'll simulate a successful payment by redirecting directly.
-        return RedirectToAction("PaymentComplete", "Payment", new { transactionId = createdTransaction.TransactionId, success = true });
+        return RedirectToAction("PaymentComplete", "Transaction", new { transactionId = createdTransaction.TransactionId, success = true });
     }
 
     /// <summary>
@@ -127,15 +116,16 @@ public class TransactionController : Controller
         }
     }
 
-    /// <summary>
-    /// An action to view all transactions for monitoring purposes.
-    /// </summary>
     [HttpGet("Index")]
     public async Task<IActionResult> Index()
     {
         var transactions = await _transactionRepository.GetAllTransactionsAsync();
-        // Return a view that lists all transactions
-        // For example: return View(transactions);
         return View(transactions);
+    }
+    [HttpGet("PaymentComplete")]
+    public async Task<IActionResult> PaymentComplete(Guid transactionId, bool success = true)
+    {
+        var transaction = await _transactionRepository.GetTransactionByIdAsync(transactionId);
+        return View(transaction);
     }
 }

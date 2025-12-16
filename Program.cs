@@ -22,8 +22,7 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 builder.Services.AddScoped<IPlanDetailsRepository, PlanDetailsRepository>();
 builder.Services.AddScoped<IKeyService, KeyService>();
-// Assuming you have a KeyRepository, if not, you'll need to create it.
-// builder.Services.AddScoped<IKeyRepository, KeyRepository>();
+builder.Services.AddScoped<IKeyRepository, KeyRepository>();
 
 var app = builder.Build();
 

@@ -49,6 +49,6 @@ public class CustomerRepository : ICustomerRepository
     }
     public async Task<Customer?> GetCustomerByEmailAsync(string email)
     {
-        return await _context.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.Email == email);
+        return await _context.Customers.FirstOrDefaultAsync(c => c.Email == email);
     }
 }

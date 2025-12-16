@@ -7,13 +7,15 @@ namespace SportMania.Services;
 
 public class KeyService : IKeyService
 {
+    private readonly IKeyRepository _keyRepository;
     private const int KeyLength = 16;
     private const string Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     
-    /// <summary>
-    /// Generates a new unique key and saves it to the database.
-    /// </summary>
-    /// <returns>The newly created Key object.</returns>
+    public KeyService(IKeyRepository keyRepository)
+    {
+        _keyRepository = keyRepository;
+    }
+    
     public async Task<Key> GenerateKeyAsync()
     {
         var newKey = new Key
@@ -22,8 +24,8 @@ public class KeyService : IKeyService
             Code = GenerateUniqueCode(),
             IsRedeemed = false
         };
-
-        return await Task.FromResult(newKey);
+        
+        return await _keyRepository.CreateAsync(newKey);
     }
 
     private static string GenerateUniqueCode()
