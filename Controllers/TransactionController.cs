@@ -1,131 +1,115 @@
 using Microsoft.AspNetCore.Mvc;
-using SportMania.Models;
+using SportMania.Models.Requests;
 using SportMania.Repository.Interface;
 using SportMania.Services.Interface;
-using SportMania.Models.Requests;
 
 [Route("[controller]")]
 public class TransactionController : Controller
 {
-    private readonly ITransactionRepository _transactionRepository;
-    private readonly ICustomerRepository _customerRepository;
+    private readonly ITransactionService _transactionService;
     private readonly IPlanRepository _planRepository;
-    private readonly IKeyService _keyService;
+    private readonly ITransactionRepository _transactionRepository;
 
     public TransactionController(
-        ITransactionRepository transactionRepository,
-        ICustomerRepository customerRepository,
+        ITransactionService transactionService,
         IPlanRepository planRepository,
-        IKeyService keyService)
+        ITransactionRepository transactionRepository)
     {
-        _transactionRepository = transactionRepository;
-        _customerRepository = customerRepository;
+        _transactionService = transactionService;
         _planRepository = planRepository;
-        _keyService = keyService;
+        _transactionRepository = transactionRepository;
     }
 
-    /// <summary>
-    /// Step 1: User selects a plan. This action shows a page to enter an email.
-    /// </summary>
-    [HttpGet("Create/{planId}")]
-    public async Task<IActionResult> Create(Guid planId)
-    {
-        var plan = await _planRepository.GetByIdAsync(planId);
-        var key = await _keyService.GenerateKeyAsync();
-        if (plan == null)
-        {
-            return NotFound("Plan not found.");
-        }
-
-        var model = new RequestTransaction { PlanId = planId };
-        // You would have a view that displays plan details and an email input field.
-        // For example: return View(model);
-        return Ok($"This is the page to enter your email for Plan: {plan.Name}. Submit to /Transaction/InitiatePayment.");
-    }
-
-    /// <summary>
-    /// Step 2: User submits their email. A pending transaction is created,
-    /// and the user is redirected to a (mock) payment gateway.
-    /// </summary>
     [HttpPost("InitiatePayment")]
-    public async Task<IActionResult> InitiatePayment([FromForm] RequestTransaction req)
+    public async Task<IActionResult> InitiatePayment([FromForm] RequestTransaction req, [FromForm] string Phone)
     {
-        if (!ModelState.IsValid){ return BadRequest(ModelState);}
-
-        var customer = await _customerRepository.GetCustomerByEmailAsync(req.Email)
-                       ?? await _customerRepository.CreateCustomerAsync(new Customer { Email = req.Email });
-
-        var plan = await _planRepository.GetByIdAsync(req.PlanId);
-        if (plan == null) return NotFound("Plan not found.");
-        Key key = await _keyService.GenerateKeyAsync();
-
-        // Create a pending transaction before sending to payment gateway
-        var transaction = new Transaction
+        try
         {
-            Customer = customer,
-            Plan = plan,
-            Amount = plan.Price.ToString(),
-            Key = key,
-            PaymentStatus = "Pending",
-        };
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-        var createdTransaction = await _transactionRepository.CreateTransactionAsync(transaction);
+            var baseUrl = Url.Action("PaymentCallback", "Transaction", null, Request.Scheme);
 
-        // TODO: Redirect to the actual payment gateway with transaction details.
-        // The return URL for the gateway should point to our PaymentCallback action.
-        // For now, we'll simulate a successful payment by redirecting directly.
-        return RedirectToAction("PaymentComplete", "Transaction", new { transactionId = createdTransaction.TransactionId, success = true });
+            if (string.IsNullOrEmpty(baseUrl))
+                return StatusCode(500, "Could not generate payment callback URL.");
+
+            var (isSuccess, result) = await _transactionService.InitiatePaymentAsync(req, Phone, baseUrl);
+
+            return isSuccess ? Redirect(result) : BadRequest(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 
-    /// <summary>
-    /// Step 3: Callback from the payment gateway.
-    /// This action processes the payment result.
-    /// </summary>
     [HttpGet("PaymentCallback")]
-    public async Task<IActionResult> PaymentCallback(Guid transactionId, bool success)
+    public async Task<IActionResult> PaymentCallback(Guid transactionId, string status_id)
     {
-        var transaction = await _transactionRepository.GetTransactionByIdAsync(transactionId);
-        if (transaction == null)
+        try
         {
-            return NotFound("Transaction not found.");
+            var transaction = await _transactionService.ProcessPaymentCallbackAsync(transactionId, status_id);
+
+            if (transaction == null)
+                return NotFound("Transaction not found.");
+
+            return transaction.PaymentStatus == "Success"
+                ? RedirectToAction("PaymentComplete", new { transactionId = transaction.TransactionId })
+                : RedirectToAction("PaymentFailed", new { transactionId = transaction.TransactionId });
         }
-
-        if (success)
+        catch (Exception ex)
         {
-            // Payment was successful
-            transaction.PaymentStatus = "Success";
-
-            // Generate a unique key for the user
-            var newKey = await _keyService.GenerateKeyAsync();
-            transaction.Key = newKey; // Assign the generated key to the transaction
-
-            await _transactionRepository.UpdateTransactionAsync(transaction);
-
-            // Redirect to a success page showing the user their key
-            return RedirectToAction("PaymentComplete", "Payment", new { transactionId = transaction.TransactionId });
-        }
-        else
-        {
-            // Payment failed
-            transaction.PaymentStatus = "Failed";
-            await _transactionRepository.UpdateTransactionAsync(transaction);
-
-            // Redirect to a failure page
-            // For example: return View("Failure", transaction);
-            return Ok("Payment Failed. Please try again.");
+            return StatusCode(500, $"Internal server error: {ex.Message}");
         }
     }
 
     [HttpGet("Index")]
     public async Task<IActionResult> Index()
     {
-        var transactions = await _transactionRepository.GetAllTransactionsAsync();
-        return View(transactions);
+        try
+        {
+            var transactions = await _transactionRepository.GetAllTransactionsAsync();
+            return View(transactions);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
+
     [HttpGet("PaymentComplete")]
-    public async Task<IActionResult> PaymentComplete(Guid transactionId, bool success = true)
+    public async Task<IActionResult> PaymentComplete(Guid transactionId)
     {
-        var transaction = await _transactionRepository.GetTransactionByIdAsync(transactionId);
-        return View(transaction);
+        try
+        {
+            var transaction = await _transactionRepository.GetTransactionByIdAsync(transactionId);
+
+            if (transaction == null)
+                return NotFound("Transaction not found.");
+
+            return View(transaction);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
+    }
+
+    [HttpGet("PaymentFailed")]
+    public async Task<IActionResult> PaymentFailed(Guid transactionId)
+    {
+        try
+        {
+            var transaction = await _transactionRepository.GetTransactionByIdAsync(transactionId);
+
+            if (transaction == null)
+                return NotFound("Transaction not found.");
+
+            return View(transaction);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"Internal server error: {ex.Message}");
+        }
     }
 }
