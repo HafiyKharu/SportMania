@@ -54,8 +54,8 @@ public class TransactionController : Controller
                 return NotFound("Transaction not found.");
 
             return transaction.PaymentStatus == "Success"
-                ? RedirectToAction("PaymentComplete", new { transactionId = transaction.TransactionId })
-                : RedirectToAction("PaymentFailed", new { transactionId = transaction.TransactionId });
+                ? RedirectToAction("PaymentComplete", "Transaction", new { transactionId = transaction.TransactionId })
+                : RedirectToAction("PaymentFailed", "Transaction", new { transactionId = transaction.TransactionId });
         }
         catch (Exception ex)
         {
@@ -77,7 +77,7 @@ public class TransactionController : Controller
         }
     }
 
-    [HttpGet("PaymentComplete")]
+    [HttpGet("PaymentComplete/{transactionId}")]
     public async Task<IActionResult> PaymentComplete(Guid transactionId)
     {
         try
@@ -95,7 +95,7 @@ public class TransactionController : Controller
         }
     }
 
-    [HttpGet("PaymentFailed")]
+    [HttpGet("PaymentFailed/{transactionId}")]
     public async Task<IActionResult> PaymentFailed(Guid transactionId)
     {
         try
