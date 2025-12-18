@@ -91,17 +91,12 @@ namespace SportMania.Services
                 if (transaction == null)
                     throw new KeyNotFoundException($"Transaction with ID {transactionId} not found.");
 
-                bool isSuccess = statusId == "1";
-
-                if (isSuccess)
+                transaction.PaymentStatus = statusId switch
                 {
-                    transaction.PaymentStatus = "Success";
-                }
-                else
-                {
-                    transaction.PaymentStatus = "Failed";
-                }
-
+                    "1" => "Success",
+                    _ => "Failed",
+                };
+                await _transactionRepository.UpdateTransactionAsync(transaction);
                 return transaction;
             }
             catch (Exception ex)
