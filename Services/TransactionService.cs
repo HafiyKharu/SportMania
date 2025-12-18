@@ -91,21 +91,17 @@ namespace SportMania.Services
                 if (transaction == null)
                     throw new KeyNotFoundException($"Transaction with ID {transactionId} not found.");
 
-                // ToyyibPay status_id: 1 = Success
                 bool isSuccess = statusId == "1";
 
                 if (isSuccess)
                 {
                     transaction.PaymentStatus = "Success";
-                    var newKey = await _keyService.GenerateKeyAsync();
-                    transaction.Key = newKey;
                 }
                 else
                 {
                     transaction.PaymentStatus = "Failed";
                 }
 
-                await _transactionRepository.UpdateTransactionAsync(transaction);
                 return transaction;
             }
             catch (Exception ex)
