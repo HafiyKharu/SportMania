@@ -1,0 +1,63 @@
+@model SportMania.Models.Plan
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<IdentityUser> SignInManager
+
+@{
+    ViewData["Title"] = "Plan Details";
+}
+
+@if (!SignInManager.IsSignedIn(User))
+{
+    <div class="alert alert-warning text-center" role="alert">
+        Please <a asp-area="Identity" asp-page="/Account/Login" class="alert-link">log in</a> to view plan details.
+    </div>
+}
+else
+{
+    <h2>@ViewData["Title"]</h2>
+
+    <div class="card shadow-sm bg-black text-white" style="max-width: 540px;">
+        <div class="row g-0">
+            @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+            {
+                <div class="col-md-4 d-flex align-items-center justify-content-center p-3">
+                    <img src="@Model.ImageUrl" class="img-fluid rounded-start" alt="@Model.Name">
+                </div>
+            }
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h3 class="card-title">@Model.Name</h3>
+                    <p class="card-text">@Model.Description</p>
+
+                    <div class="d-flex align-items-baseline mb-3">
+                        <h3 class="card-text price me-2">@Model.Price</h3>
+                        <small>/ @Model.Duration</small>
+                    </div>
+
+                    @if (Model.Details != null && Model.Details.Any())
+                    {
+                        <h5 class="mt-4">What's Included:</h5>
+                        <ul class="list-unstyled">
+                            @foreach (var detail in Model.Details)
+                            {
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                        class="bi bi-check-circle-fill text-success me-2" viewBox="0 0 16 16">
+                                        <path
+                                            d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
+                                    </svg>
+                                    @detail.Value
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    <div class="mt-4">
+                        <a asp-action="Edit" asp-route-id="@Model.PlanId" class="btn btn-primary">Edit</a>
+                        <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

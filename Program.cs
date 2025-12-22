@@ -1,18 +1,43 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using SportMania.Data;
+using SportMania.Repository.Interface;
+using SportMania.Repository;
+using SportMania.Services.Interface;
+using SportMania.Services;
+using SportMania.Handlers.Interface;
+using SportMania.Handlers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddHttpClient();
+
+// Add database connection.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// Add Identity
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ApplicationDbContext>();
+
+// Add Controllers
 builder.Services.AddControllersWithViews();
+
+// Add repositories
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
+builder.Services.AddScoped<IPlanRepository, PlanRepository>();
+builder.Services.AddScoped<IPlanDetailsRepository, PlanDetailsRepository>();
+builder.Services.AddScoped<IKeyRepository, KeyRepository>();
+
+// Add services
+builder.Services.AddScoped<IKeyService, KeyService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+
+// Add handlers
+builder.Services.AddScoped<IToyyibPayHandler, ToyyibPayHandler>();
 
 var app = builder.Build();
 
