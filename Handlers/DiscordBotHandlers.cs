@@ -192,13 +192,23 @@ public class DiscordCommandHandler : IDiscordCommandHandler
 
     public async Task HandleRedeemAsync(SocketSlashCommand command)
     {
+        if (command.GuildId == null)
+        {
+            await command.RespondAsync("This command can only be used in a server.", ephemeral: true);
+            return;
+        }
+
         using var scope = _serviceProvider.CreateScope();
         var keyRepo = scope.ServiceProvider.GetRequiredService<IKeyRepository>();
         var guildRepo = scope.ServiceProvider.GetRequiredService<IDiscordGuildRepository>();
         var mappingRepo = scope.ServiceProvider.GetRequiredService<IPlanRoleMappingRepository>();
 
         var licenseKey = command.Data.Options.First(o => o.Name == "key").Value.ToString()!;
-        var guildId = command.GuildId!.Value;
+        var guildId = command.GuildId.Value;
+
+        // ADD THIS DEBUG LOG
+        _logger.LogInformation("Redeem attempt: LicenseKey='{LicenseKey}', GuildId={GuildId}, UserId={UserId}", 
+            licenseKey, guildId, command.User.Id);
 
         var existingKey = await keyRepo.GetByUserIdAndGuildAsync(command.User.Id, guildId);
         if (existingKey != null && existingKey.IsActive)

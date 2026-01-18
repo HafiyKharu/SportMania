@@ -2,6 +2,7 @@ using SportMania.Models;
 using SportMania.Repository.Interface;
 using SportMania.Services.Interface;
 using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
 
 namespace SportMania.Services;
 
@@ -9,11 +10,13 @@ public class KeyService : IKeyService
 {
     private readonly IKeyRepository _keyRepository;
     private readonly IDiscordGuildRepository _guildRepository;
+    private readonly ILogger<KeyService> _logger;
 
-    public KeyService(IKeyRepository keyRepository, IDiscordGuildRepository guildRepository)
+    public KeyService(IKeyRepository keyRepository, IDiscordGuildRepository guildRepository, ILogger<KeyService> logger)
     {
         _keyRepository = keyRepository;
         _guildRepository = guildRepository;
+        _logger = logger;
     }
     
     public async Task<Key> GenerateKeyAsync(ulong guildId, Guid planId, int durationDays)
@@ -35,7 +38,8 @@ public class KeyService : IKeyService
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
-        
+
+        // This line was missing. It saves the key to the database.
         return await _keyRepository.CreateAsync(newKey);
     }
 
@@ -84,8 +88,21 @@ public class KeyService : IKeyService
     {
         var key = await _keyRepository.GetByLicenseKeyAndGuildAsync(licenseKey, guildId);
         
-        if (key == null || !key.IsActive || key.RedeemedByUserId != null)
+        if (key == null)
         {
+            _logger.LogWarning("Redeem failed: Key '{LicenseKey}' not found or does not belong to guild {GuildId}.", licenseKey, guildId);
+            return null;
+        }
+
+        if (!key.IsActive)
+        {
+            _logger.LogWarning("Redeem failed: Key '{LicenseKey}' is not active.", licenseKey);
+            return null;
+        }
+
+        if (key.RedeemedByUserId != null)
+        {
+            _logger.LogWarning("Redeem failed: Key '{LicenseKey}' has already been redeemed by user {UserId}.", licenseKey, key.RedeemedByUserId);
             return null;
         }
 
@@ -94,6 +111,7 @@ public class KeyService : IKeyService
         key.ExpiresAt = DateTime.UtcNow.AddDays(key.DurationDays);
         
         await _keyRepository.UpdateAsync(key);
+        _logger.LogInformation("Key '{LicenseKey}' successfully redeemed by user {UserId} in guild {GuildId}.", licenseKey, userId, guildId);
         return key;
     }
 

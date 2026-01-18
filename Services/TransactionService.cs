@@ -41,8 +41,15 @@ namespace SportMania.Services
                 if (plan == null) 
                     return (false, "Plan not found.");
 
-                // Generate key with guild ID and duration
-                var key = await _keyService.GenerateKeyAsync(req.GuildId, req.PlanId, req.DurationDays);
+                // Parse the duration from the plan
+                if (!int.TryParse(plan.Duration, out int durationDays))
+                {
+                    // Handle cases where duration might not be a valid number, maybe default or log an error
+                    return (false, $"Invalid duration format for plan {plan.Name}.");
+                }
+
+                // Generate key with guild ID and correct duration from the plan
+                var key = await _keyService.GenerateKeyAsync(req.GuildId, req.PlanId, durationDays);
 
                 // Create pending transaction
                 var transaction = new Transaction

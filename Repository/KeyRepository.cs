@@ -34,6 +34,7 @@ public class KeyRepository : IKeyRepository
     public async Task<Key?> GetByLicenseKeyAndGuildAsync(string licenseKey, ulong guildId)
     {
         return await _context.Keys
+            .Include(k => k.Plan)
             .FirstOrDefaultAsync(k => k.LicenseKey == licenseKey && k.GuildId == guildId);
     }
 
