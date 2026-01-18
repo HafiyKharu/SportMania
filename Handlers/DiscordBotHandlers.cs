@@ -242,10 +242,29 @@ public class DiscordCommandHandler : IDiscordCommandHandler
             var user = socketGuild.GetUser(command.User.Id);
             var role = socketGuild.GetRole(mapping.RoleId);
 
+            _logger.LogInformation("Role assignment: GuildId={GuildId}, RoleId={RoleId}, UserId={UserId}, RoleFound={RoleFound}, UserFound={UserFound}",
+                guildId, mapping.RoleId, command.User.Id, role != null, user != null);
+
             if (role != null && user != null)
             {
-                await user.AddRoleAsync(role);
+                try
+                {
+                    await user.AddRoleAsync(role);
+                    _logger.LogInformation("✅ Role '{RoleName}' assigned to user {UserId}", role.Name, command.User.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Failed to assign role '{RoleName}' to user {UserId}", role.Name, command.User.Id);
+                }
             }
+            else
+            {
+                _logger.LogWarning("⚠️ Could not assign role: Role={RoleFound}, User={UserFound}", role != null, user != null);
+            }
+        }
+        else
+        {
+            _logger.LogWarning("⚠️ No plan-to-role mapping found for PlanId={PlanId} in GuildId={GuildId}. Use /setuproles to configure.", key.PlanId, guildId);
         }
 
         var embed = new EmbedBuilder()
