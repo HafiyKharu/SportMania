@@ -42,7 +42,7 @@
                                                 @transaction.PaymentStatus
                                             </span>
                                         </td>
-                                        <td>@(transaction.Key?.Code ?? "N/A")</td>
+                                        <td>@(transaction.Key?.LicenseKey ?? "N/A")</td>
                                         <td>@transaction.CreatedAt.ToString("yyyy-MM-dd HH:mm")</td>
                                     </tr>
                                 }

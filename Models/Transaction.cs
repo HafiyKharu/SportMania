@@ -5,11 +5,18 @@ namespace SportMania.Models;
 public class Transaction : IHasAuditTimestamps
 {
     public Guid TransactionId { get; set; }
+    public Guid CustomerId { get; set; }
+    public Guid PlanId { get; set; }
+    public Guid? KeyId { get; set; } // Link to generated key
+    public ulong GuildId { get; set; } // Discord Guild ID
     public string Amount { get; set; } = string.Empty;
-    public string PaymentStatus { get; set; } = string.Empty;
-    public Key Key { get; set; } = new Key();
-    public Customer Customer { get; set; } = new Customer();
-    public Plan Plan { get; set; } = new Plan();
+    public string PaymentStatus { get; set; } = "Pending";
+    public string? BillCode { get; set; }
+
+    public Customer Customer { get; set; } = null!;
+    public Plan Plan { get; set; } = null!;
+    public Key? Key { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }

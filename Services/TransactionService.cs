@@ -41,8 +41,8 @@ namespace SportMania.Services
                 if (plan == null) 
                     return (false, "Plan not found.");
 
-                // Generate key
-                var key = await _keyService.GenerateKeyAsync();
+                // Generate key with guild ID and duration
+                var key = await _keyService.GenerateKeyAsync(req.GuildId, req.PlanId, req.DurationDays);
 
                 // Create pending transaction
                 var transaction = new Transaction

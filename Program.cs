@@ -7,6 +7,8 @@ using SportMania.Services.Interface;
 using SportMania.Services;
 using SportMania.Handlers.Interface;
 using SportMania.Handlers;
+using Discord;
+using Discord.WebSocket;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,13 +33,36 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 builder.Services.AddScoped<IPlanDetailsRepository, PlanDetailsRepository>();
 builder.Services.AddScoped<IKeyRepository, KeyRepository>();
+builder.Services.AddScoped<IDiscordGuildRepository, DiscordGuildRepository>();
+builder.Services.AddScoped<IPlanRoleMappingRepository, PlanRoleMappingRepository>();
+
+// Add handlers
+builder.Services.AddScoped<IToyyibPayHandler, ToyyibPayHandler>();
+builder.Services.AddScoped<IDiscordCommandHandler, DiscordCommandHandler>(); // ADD THIS LINE
 
 // Add services
 builder.Services.AddScoped<IKeyService, KeyService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 
-// Add handlers
-builder.Services.AddScoped<IToyyibPayHandler, ToyyibPayHandler>();
+// Register DiscordSocketClient as singleton
+builder.Services.AddSingleton<DiscordSocketClient>(provider =>
+{
+    var config = new DiscordSocketConfig
+    {
+        GatewayIntents = GatewayIntents.Guilds |
+                        GatewayIntents.GuildMessages |
+                        GatewayIntents.MessageContent |
+                        GatewayIntents.GuildMembers
+    };
+    return new DiscordSocketClient(config);
+});
+
+// Register bot service as singleton
+builder.Services.AddSingleton<IDiscordBotService, DiscordBotService>();
+builder.Services.AddHostedService(provider => (DiscordBotService)provider.GetRequiredService<IDiscordBotService>());
+
+// Add hosted service for license expiration
+builder.Services.AddHostedService<LicenseExpirationService>();
 
 var app = builder.Build();
 
@@ -49,7 +74,6 @@ if (app.Environment.IsDevelopment())
 else
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
