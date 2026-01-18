@@ -8,14 +8,23 @@ namespace SportMania.Services;
 public class KeyService : IKeyService
 {
     private readonly IKeyRepository _keyRepository;
-    
-    public KeyService(IKeyRepository keyRepository)
+    private readonly IDiscordGuildRepository _guildRepository;
+
+    public KeyService(IKeyRepository keyRepository, IDiscordGuildRepository guildRepository)
     {
         _keyRepository = keyRepository;
+        _guildRepository = guildRepository;
     }
     
     public async Task<Key> GenerateKeyAsync(ulong guildId, Guid planId, int durationDays)
     {
+        var guild = await _guildRepository.GetByIdAsync(guildId);
+        if (guild == null)
+        {
+            guild = new DiscordGuild { GuildId = guildId };
+            await _guildRepository.CreateAsync(guild);
+        }
+
         var newKey = new Key
         {
             KeyId = Guid.NewGuid(),
