@@ -38,7 +38,7 @@ builder.Services.AddScoped<IPlanRoleMappingRepository, PlanRoleMappingRepository
 
 // Add handlers
 builder.Services.AddScoped<IToyyibPayHandler, ToyyibPayHandler>();
-builder.Services.AddScoped<IDiscordCommandHandler, DiscordCommandHandler>(); // ADD THIS LINE
+builder.Services.AddScoped<IDiscordCommandHandler, DiscordCommandHandler>();
 
 // Add services
 builder.Services.AddScoped<IKeyService, KeyService>();
@@ -59,8 +59,10 @@ builder.Services.AddSingleton<DiscordSocketClient>(provider =>
 
 // Register bot service as singleton
 builder.Services.AddSingleton<IDiscordBotService, DiscordBotService>();
-builder.Services.AddHostedService(provider => (DiscordBotService)provider.GetRequiredService<IDiscordBotService>());
-
+if (builder.Configuration.GetValue<bool>("DiscordBot:Enabled"))
+{
+    builder.Services.AddHostedService(provider => (DiscordBotService)provider.GetRequiredService<IDiscordBotService>());
+}
 // Add hosted service for license expiration
 builder.Services.AddHostedService<LicenseExpirationService>();
 
