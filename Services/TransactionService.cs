@@ -13,19 +13,22 @@ namespace SportMania.Services
         private readonly IPlanRepository _planRepository;
         private readonly IKeyService _keyService;
         private readonly IToyyibPayHandler _toyyibPayHandler;
+        private readonly IConfiguration _configuration;
 
         public TransactionService(
             ITransactionRepository transactionRepository,
             ICustomerRepository customerRepository,
             IPlanRepository planRepository,
             IKeyService keyService,
-            IToyyibPayHandler toyyibPayHandler)
+            IToyyibPayHandler toyyibPayHandler,
+            IConfiguration configuration)
         {
             _transactionRepository = transactionRepository;
             _customerRepository = customerRepository;
             _planRepository = planRepository;
             _keyService = keyService;
             _toyyibPayHandler = toyyibPayHandler;
+            _configuration = configuration;
         }
 
         public async Task<(bool IsSuccess, string Result)> InitiatePaymentAsync(RequestTransaction req, string phone, string returnUrl)
@@ -44,12 +47,17 @@ namespace SportMania.Services
                 // Parse the duration from the plan
                 if (!int.TryParse(plan.Duration, out int durationDays))
                 {
-                    // Handle cases where duration might not be a valid number, maybe default or log an error
                     return (false, $"Invalid duration format for plan {plan.Name}.");
                 }
 
                 // Generate key with guild ID and correct duration from the plan
-                var key = await _keyService.GenerateKeyAsync(req.GuildId, req.PlanId, durationDays);
+                var guildIdString = _configuration["GuildsID:CREED"];
+                if (string.IsNullOrEmpty(guildIdString))
+                    return (false, "Guild ID not configured.");
+                
+                if (!ulong.TryParse(guildIdString, out ulong guildId))
+                    return (false, "Invalid Guild ID format.");
+                var key = await _keyService.GenerateKeyAsync(guildId, req.PlanId, durationDays);
 
                 // Create pending transaction
                 var transaction = new Transaction
