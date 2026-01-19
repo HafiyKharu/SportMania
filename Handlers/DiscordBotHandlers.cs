@@ -3,6 +3,7 @@ using Discord.WebSocket;
 using SportMania.Handlers.Interface;
 using SportMania.Models;
 using SportMania.Repository.Interface;
+using SportMania.Services.Interface;
 using System.Security.Cryptography;
 
 namespace SportMania.Handlers;
@@ -13,14 +14,9 @@ public class DiscordCommandHandler : IDiscordCommandHandler
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<DiscordCommandHandler> _logger;
 
-    public DiscordCommandHandler(
-        DiscordSocketClient client,
-        IServiceProvider serviceProvider,
-        ILogger<DiscordCommandHandler> logger)
+    public DiscordCommandHandler(DiscordSocketClient client, IServiceProvider serviceProvider, ILogger<DiscordCommandHandler> logger)
     {
-        _client = client;
-        _serviceProvider = serviceProvider;
-        _logger = logger;
+        _client = client; _serviceProvider = serviceProvider; _logger = logger;
     }
 
     public async Task HandleSetupRolesAsync(SocketSlashCommand command)
@@ -134,7 +130,7 @@ public class DiscordCommandHandler : IDiscordCommandHandler
     public async Task HandleGenerateAsync(SocketSlashCommand command)
     {
         using var scope = _serviceProvider.CreateScope();
-        var keyRepo = scope.ServiceProvider.GetRequiredService<IKeyRepository>();
+        var keyService = scope.ServiceProvider.GetRequiredService<IKeyService>();
         var guildRepo = scope.ServiceProvider.GetRequiredService<IDiscordGuildRepository>();
         var planRepo = scope.ServiceProvider.GetRequiredService<IPlanRepository>();
 
@@ -162,284 +158,18 @@ public class DiscordCommandHandler : IDiscordCommandHandler
             durationDays = 30;
         }
 
-        var keys = new List<string>();
-        for (int i = 0; i < amount; i++)
-        {
-            var licenseKey = GenerateLicenseKey();
-            var key = new Key
-            {
-                LicenseKey = licenseKey,
-                GuildId = command.GuildId!.Value,
-                PlanId = plan.PlanId,
-                DurationDays = durationDays,
-                IsActive = true
-            };
-            await keyRepo.CreateAsync(key);
-            keys.Add(licenseKey);
-        }
+        var generatedKeys = await keyService.GenerateKeysAsync(command.GuildId!.Value, plan.PlanId, (int)amount, durationDays);
 
         var embed = new EmbedBuilder()
             .WithTitle($"🔑 {plan.Name} Keys Generated")
             .WithColor(Color.Green)
             .WithDescription($"Generated {amount} key(s) for **{plan.Name}** ({durationDays} days)")
-            .AddField("Keys", string.Join("\n", keys.Select(k => $"`{k}`")))
+            .AddField("Keys", string.Join("\n", generatedKeys.Select(k => $"`{k.LicenseKey}`")))
             .WithTimestamp(DateTimeOffset.Now)
             .Build();
 
         await command.RespondAsync(embed: embed, ephemeral: true);
         await LogToChannelAsync(command.GuildId!.Value, guildRepo, $"🔑 {command.User} generated {amount} {plan.Name} key(s)");
-    }
-
-    public async Task HandleRedeemAsync(SocketSlashCommand command)
-    {
-        if (command.GuildId == null)
-        {
-            await command.RespondAsync("This command can only be used in a server.", ephemeral: true);
-            return;
-        }
-
-        using var scope = _serviceProvider.CreateScope();
-        var keyRepo = scope.ServiceProvider.GetRequiredService<IKeyRepository>();
-        var guildRepo = scope.ServiceProvider.GetRequiredService<IDiscordGuildRepository>();
-        var mappingRepo = scope.ServiceProvider.GetRequiredService<IPlanRoleMappingRepository>();
-
-        var licenseKey = command.Data.Options.First(o => o.Name == "key").Value.ToString()!;
-        var guildId = command.GuildId.Value;
-
-        // ADD THIS DEBUG LOG
-        _logger.LogInformation("Redeem attempt: LicenseKey='{LicenseKey}', GuildId={GuildId}, UserId={UserId}", 
-            licenseKey, guildId, command.User.Id);
-
-        var existingKey = await keyRepo.GetByUserIdAndGuildAsync(command.User.Id, guildId);
-        if (existingKey != null && existingKey.IsActive)
-        {
-            await command.RespondAsync("You already have an active license!", ephemeral: true);
-            return;
-        }
-
-        var key = await keyRepo.GetByLicenseKeyAndGuildAsync(licenseKey, guildId);
-        if (key == null)
-        {
-            await command.RespondAsync("Invalid license key.", ephemeral: true);
-            return;
-        }
-
-        if (key.RedeemedByUserId != null)
-        {
-            await command.RespondAsync("This key has already been redeemed.", ephemeral: true);
-            return;
-        }
-
-        key.RedeemedByUserId = command.User.Id;
-        key.RedeemedAt = DateTime.UtcNow;
-        key.ExpiresAt = DateTime.UtcNow.AddDays(key.DurationDays);
-        await keyRepo.UpdateAsync(key);
-
-        var mapping = await mappingRepo.GetByGuildAndPlanAsync(guildId, key.PlanId);
-        if (mapping != null)
-        {
-            var socketGuild = _client.GetGuild(guildId);
-            var user = socketGuild.GetUser(command.User.Id);
-            var role = socketGuild.GetRole(mapping.RoleId);
-
-            _logger.LogInformation("Role assignment: GuildId={GuildId}, RoleId={RoleId}, UserId={UserId}, RoleFound={RoleFound}, UserFound={UserFound}",
-                guildId, mapping.RoleId, command.User.Id, role != null, user != null);
-
-            if (role != null && user != null)
-            {
-                try
-                {
-                    await user.AddRoleAsync(role);
-                    _logger.LogInformation("✅ Role '{RoleName}' assigned to user {UserId}", role.Name, command.User.Id);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "❌ Failed to assign role '{RoleName}' to user {UserId}", role.Name, command.User.Id);
-                }
-            }
-            else
-            {
-                _logger.LogWarning("⚠️ Could not assign role: Role={RoleFound}, User={UserFound}", role != null, user != null);
-            }
-        }
-        else
-        {
-            _logger.LogWarning("⚠️ No plan-to-role mapping found for PlanId={PlanId} in GuildId={GuildId}. Use /setuproles to configure.", key.PlanId, guildId);
-        }
-
-        var embed = new EmbedBuilder()
-            .WithTitle("✅ License Activated!")
-            .WithColor(Color.Green)
-            .AddField("Plan", key.Plan?.Name ?? "Unknown", inline: true)
-            .AddField("Duration", $"{key.DurationDays} days", inline: true)
-            .AddField("Expires", key.ExpiresAt?.ToString("yyyy-MM-dd HH:mm UTC") ?? "Never")
-            .WithFooter("Thank you for your purchase!")
-            .WithTimestamp(DateTimeOffset.Now)
-            .Build();
-
-        await command.RespondAsync(embed: embed, ephemeral: true);
-        await LogToChannelAsync(guildId, guildRepo, $"✅ {command.User.Mention} activated {key.Plan?.Name} (expires: {key.ExpiresAt:yyyy-MM-dd})");
-    }
-
-    public async Task HandleSetLogAsync(SocketSlashCommand command)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var guildRepo = scope.ServiceProvider.GetRequiredService<IDiscordGuildRepository>();
-
-        if (!await HasAdminPermissionAsync(command))
-        {
-            await command.RespondAsync("You don't have permission to use this command.", ephemeral: true);
-            return;
-        }
-
-        var channel = (SocketChannel)command.Data.Options.First(o => o.Name == "channel").Value;
-        var guild = await guildRepo.GetOrCreateAsync(command.GuildId!.Value);
-        guild.LogChannelId = channel.Id;
-        await guildRepo.UpdateAsync(guild);
-
-        await command.RespondAsync($"Log channel set to <#{channel.Id}>", ephemeral: true);
-    }
-
-    public async Task HandleKeysAsync(SocketSlashCommand command)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var keyRepo = scope.ServiceProvider.GetRequiredService<IKeyRepository>();
-
-        if (!await HasAdminPermissionAsync(command))
-        {
-            await command.RespondAsync("You don't have permission to use this command.", ephemeral: true);
-            return;
-        }
-
-        var keys = await keyRepo.GetActiveKeysByGuildIdAsync(command.GuildId!.Value);
-        var keyList = keys.ToList();
-
-        if (!keyList.Any())
-        {
-            await command.RespondAsync("No unredeemed keys found.", ephemeral: true);
-            return;
-        }
-
-        var embed = new EmbedBuilder()
-            .WithTitle("🔑 Unredeemed License Keys")
-            .WithColor(Color.Blue)
-            .WithDescription(string.Join("\n", keyList.Select(k =>
-                $"`{k.LicenseKey}` - **{k.Plan?.Name ?? "Unknown"}** ({k.DurationDays} days)")))
-            .WithFooter($"Total: {keyList.Count} keys")
-            .WithTimestamp(DateTimeOffset.Now)
-            .Build();
-
-        await command.RespondAsync(embed: embed, ephemeral: true);
-    }
-
-    public async Task HandleDeleteAsync(SocketSlashCommand command)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var keyRepo = scope.ServiceProvider.GetRequiredService<IKeyRepository>();
-
-        if (!await HasAdminPermissionAsync(command))
-        {
-            await command.RespondAsync("You don't have permission to use this command.", ephemeral: true);
-            return;
-        }
-
-        var licenseKey = command.Data.Options.First(o => o.Name == "key").Value.ToString()!;
-        var key = await keyRepo.GetByLicenseKeyAndGuildAsync(licenseKey, command.GuildId!.Value);
-
-        if (key == null)
-        {
-            await command.RespondAsync("Key not found.", ephemeral: true);
-            return;
-        }
-
-        await keyRepo.DeleteAsync(key.KeyId);
-        await command.RespondAsync($"Key `{licenseKey}` has been deleted.", ephemeral: true);
-    }
-
-    public async Task HandleStatusAsync(SocketSlashCommand command)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var keyRepo = scope.ServiceProvider.GetRequiredService<IKeyRepository>();
-
-        var key = await keyRepo.GetByUserIdAndGuildAsync(command.User.Id, command.GuildId!.Value);
-
-        if (key == null)
-        {
-            await command.RespondAsync("You don't have an active license.", ephemeral: true);
-            return;
-        }
-
-        var embed = new EmbedBuilder()
-            .WithTitle("📋 License Status")
-            .WithColor(Color.Blue)
-            .AddField("Plan", key.Plan?.Name ?? "Unknown", inline: true)
-            .AddField("Status", key.IsActive ? "✅ Active" : "❌ Inactive", inline: true)
-            .AddField("Redeemed", key.RedeemedAt?.ToString("yyyy-MM-dd") ?? "N/A", inline: true)
-            .AddField("Expires", key.ExpiresAt?.ToString("yyyy-MM-dd HH:mm UTC") ?? "Never", inline: true)
-            .WithTimestamp(DateTimeOffset.Now)
-            .Build();
-
-        await command.RespondAsync(embed: embed, ephemeral: true);
-    }
-
-    public async Task HandleRevokeAsync(SocketSlashCommand command)
-    {
-        using var scope = _serviceProvider.CreateScope();
-        var keyRepo = scope.ServiceProvider.GetRequiredService<IKeyRepository>();
-        var guildRepo = scope.ServiceProvider.GetRequiredService<IDiscordGuildRepository>();
-        var mappingRepo = scope.ServiceProvider.GetRequiredService<IPlanRoleMappingRepository>();
-
-        if (!await HasAdminPermissionAsync(command))
-        {
-            await command.RespondAsync("You don't have permission to use this command.", ephemeral: true);
-            return;
-        }
-
-        var user = (SocketUser)command.Data.Options.First(o => o.Name == "user").Value;
-        var guildId = command.GuildId!.Value;
-        var key = await keyRepo.GetByUserIdAndGuildAsync(user.Id, guildId);
-
-        if (key == null)
-        {
-            await command.RespondAsync("This user doesn't have an active license.", ephemeral: true);
-            return;
-        }
-
-        key.IsActive = false;
-        await keyRepo.UpdateAsync(key);
-
-        var mapping = await mappingRepo.GetByGuildAndPlanAsync(guildId, key.PlanId);
-        if (mapping != null)
-        {
-            var socketGuild = _client.GetGuild(guildId);
-            var role = socketGuild.GetRole(mapping.RoleId);
-            var guildUser = socketGuild.GetUser(user.Id);
-            if (role != null && guildUser != null)
-            {
-                await guildUser.RemoveRoleAsync(role);
-            }
-        }
-
-        await command.RespondAsync($"License revoked from {user.Mention}", ephemeral: true);
-        await LogToChannelAsync(guildId, guildRepo, $"❌ {command.User} revoked license from {user}");
-    }
-
-    private static string GenerateLicenseKey()
-    {
-        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-        var segments = new string[4];
-
-        for (int i = 0; i < 4; i++)
-        {
-            var segment = new char[5];
-            for (int j = 0; j < 5; j++)
-            {
-                segment[j] = chars[RandomNumberGenerator.GetInt32(chars.Length)];
-            }
-            segments[i] = new string(segment);
-        }
-
-        return string.Join("-", segments);
     }
 
     private Task<bool> HasAdminPermissionAsync(SocketSlashCommand command)

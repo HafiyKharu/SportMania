@@ -9,13 +9,13 @@ public class DiscordBotService : IDiscordBotService, IHostedService
 {
     private readonly DiscordSocketClient _client;
     private readonly IConfiguration _configuration;
-    private readonly IServiceProvider _serviceProvider; // Changed: Use IServiceProvider instead of injecting handler
+    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<DiscordBotService> _logger;
 
     public DiscordBotService(
         DiscordSocketClient client,
         IConfiguration configuration,
-        IServiceProvider serviceProvider, // Changed: Inject IServiceProvider
+        IServiceProvider serviceProvider,
         ILogger<DiscordBotService> logger)
     {
         _client = client;
@@ -81,30 +81,7 @@ public class DiscordBotService : IDiscordBotService, IHostedService
             new SlashCommandBuilder()
                 .WithName("redeem")
                 .WithDescription("Redeem a license key")
-                .AddOption("key", ApplicationCommandOptionType.String, "License key", isRequired: true),
-
-            new SlashCommandBuilder()
-                .WithName("setlog")
-                .WithDescription("Set log channel")
-                .AddOption("channel", ApplicationCommandOptionType.Channel, "Log channel", isRequired: true),
-
-            new SlashCommandBuilder()
-                .WithName("keys")
-                .WithDescription("List unredeemed keys"),
-
-            new SlashCommandBuilder()
-                .WithName("delete")
-                .WithDescription("Delete a key")
-                .AddOption("key", ApplicationCommandOptionType.String, "License key", isRequired: true),
-
-            new SlashCommandBuilder()
-                .WithName("status")
-                .WithDescription("Check your license status"),
-
-            new SlashCommandBuilder()
-                .WithName("revoke")
-                .WithDescription("Revoke user's license")
-                .AddOption("user", ApplicationCommandOptionType.User, "User", isRequired: true)
+                .AddOption("key", ApplicationCommandOptionType.String, "License key", isRequired: true)
         };
 
         _logger.LogInformation("⏳ Waiting 2 seconds before registering commands...");
@@ -162,12 +139,6 @@ public class DiscordBotService : IDiscordBotService, IHostedService
                 "viewmappings" => handler.HandleViewMappingsAsync(command),
                 "removemapping" => handler.HandleRemoveMappingAsync(command),
                 "generate" => handler.HandleGenerateAsync(command),
-                "redeem" => handler.HandleRedeemAsync(command),
-                "setlog" => handler.HandleSetLogAsync(command),
-                "keys" => handler.HandleKeysAsync(command),
-                "delete" => handler.HandleDeleteAsync(command),
-                "status" => handler.HandleStatusAsync(command),
-                "revoke" => handler.HandleRevokeAsync(command),
                 _ => command.RespondAsync("❌ Unknown command.", ephemeral: true)
             });
 

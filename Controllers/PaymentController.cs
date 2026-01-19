@@ -20,7 +20,6 @@ namespace SportMania.Controllers
             var transaction = await _transactionRepository.GetTransactionByIdAsync(transactionId);
             if (transaction == null || transaction.PaymentStatus != "Success")
             {
-                // Optionally, handle the case where the transaction isn't found or wasn't successful
                 return RedirectToAction("Index", "Home");
             }
 

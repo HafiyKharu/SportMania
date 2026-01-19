@@ -8,10 +8,4 @@ public interface IDiscordCommandHandler
     Task HandleViewMappingsAsync(SocketSlashCommand command);
     Task HandleRemoveMappingAsync(SocketSlashCommand command);
     Task HandleGenerateAsync(SocketSlashCommand command);
-    Task HandleRedeemAsync(SocketSlashCommand command);
-    Task HandleSetLogAsync(SocketSlashCommand command);
-    Task HandleKeysAsync(SocketSlashCommand command);
-    Task HandleDeleteAsync(SocketSlashCommand command);
-    Task HandleStatusAsync(SocketSlashCommand command);
-    Task HandleRevokeAsync(SocketSlashCommand command);
 }
