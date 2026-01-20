@@ -5,13 +5,8 @@ using SportMania.Models.Interface;
 
 namespace SportMania.Data;
 
-public class ApplicationDbContext : IdentityDbContext
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext(options)
 {
-    public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
-        : base(options)
-    {
-    }
-
     public DbSet<Transaction> Transactions { get; set; }
     public DbSet<Customer> Customers { get; set; }
     public DbSet<Plan> Plans { get; set; }
@@ -52,58 +47,62 @@ public class ApplicationDbContext : IdentityDbContext
         return base.SaveChangesAsync(cancellationToken);
     }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        base.OnModelCreating(modelBuilder);
+        base.OnModelCreating(builder);
 
-        modelBuilder.HasDefaultSchema("SportMania");
+        builder.HasDefaultSchema("SportMania");
 
-        modelBuilder.Entity<Plan>()
+        builder.Entity<Plan>()
             .HasMany(p => p.Details)
             .WithOne(d => d.Plan)
             .HasForeignKey(d => d.PlanId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Plan>().HasQueryFilter(p => !p.IsDeleted);
-        modelBuilder.Entity<Transaction>().HasQueryFilter(t => !t.IsDeleted);
+        builder.Entity<Plan>().HasQueryFilter(p => !p.IsDeleted);
+        builder.Entity<Transaction>().HasQueryFilter(t => !t.IsDeleted);
 
-        modelBuilder.Entity<Transaction>()
+        builder.Entity<Transaction>()
             .HasOne(t => t.Customer)
             .WithMany()
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<Transaction>()
+        builder.Entity<Transaction>()
             .HasOne(t => t.Plan)
             .WithMany()
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<Transaction>()
+        builder.Entity<Transaction>()
             .HasOne(t => t.Key)
             .WithMany()
             .HasForeignKey(t => t.KeyId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<DiscordGuild>(entity =>
+        builder.Entity<DiscordGuild>(entity =>
         {
-            entity.HasKey(e => e.GuildId);
-            entity.Property(e => e.GuildId).ValueGeneratedNever();
+            entity.Property(e => e.Prefix)
+                .HasDefaultValue("!");
+
+            entity.Property(e => e.CreatedAt)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("now() at time zone 'utc'");
         });
 
-        modelBuilder.Entity<Key>(entity =>
+        builder.Entity<Key>(entity =>
         {
-            entity.HasKey(e => e.KeyId);
-            entity.HasIndex(e => e.LicenseKey).IsUnique();
-            entity.HasOne(e => e.Guild)
-                  .WithMany(g => g.Keys)
-                  .HasForeignKey(e => e.GuildId)
-                  .OnDelete(DeleteBehavior.Restrict);
-            entity.HasOne(e => e.Plan)
-                  .WithMany()
-                  .HasForeignKey(e => e.PlanId)
-                  .OnDelete(DeleteBehavior.Restrict);
+            entity.Property(e => e.KeyId)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true);
+
+            entity.Property(e => e.CreatedAt)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("now() at time zone 'utc'");
         });
 
-        modelBuilder.Entity<PlanRoleMapping>(entity =>
+        builder.Entity<PlanRoleMapping>(entity =>
         {
             entity.HasKey(e => e.MappingId);
             entity.HasIndex(e => new { e.GuildId, e.PlanId }).IsUnique();
@@ -115,6 +114,14 @@ public class ApplicationDbContext : IdentityDbContext
                   .WithMany()
                   .HasForeignKey(e => e.PlanId)
                   .OnDelete(DeleteBehavior.Cascade);
+
+            entity.Property(e => e.MappingId)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("newid()");
+
+            entity.Property(e => e.CreatedAt)
+                .ValueGeneratedOnAdd()
+                .HasDefaultValueSql("GETUTCDATE()");
         });
 
         // Seed Plans
@@ -123,7 +130,7 @@ public class ApplicationDbContext : IdentityDbContext
         var seasonId  = Guid.Parse("9b8a7c6d-5e4f-4a3b-9c2d-1a0b9c8d7e6f");
         var seededAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        modelBuilder.Entity<Plan>().HasData(
+        builder.Entity<Plan>().HasData(
             new Plan
             {
                 PlanId = weeklyId,
@@ -165,7 +172,7 @@ public class ApplicationDbContext : IdentityDbContext
             }
         );
 
-        modelBuilder.Entity<PlanDetails>().HasData(
+        builder.Entity<PlanDetails>().HasData(
             new { PlanDetailsId = Guid.Parse("c1b9d1c0-2d4d-4d3b-9f3e-b5bd6f5f0001"), PlanId = weeklyId,  Value = "7 days of full access" },
             new { PlanDetailsId = Guid.Parse("c1b9d1c0-2d4d-4d3b-9f3e-b5bd6f5f0002"), PlanId = weeklyId,  Value = "HD streaming" },
             new { PlanDetailsId = Guid.Parse("c1b9d1c0-2d4d-4d3b-9f3e-b5bd6f5f0003"), PlanId = weeklyId,  Value = "Cancel anytime" },

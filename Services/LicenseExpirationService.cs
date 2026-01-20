@@ -1,4 +1,3 @@
-using Discord.WebSocket;
 using SportMania.Repository.Interface;
 
 namespace SportMania.Services;
