@@ -1,0 +1,164 @@
+@page
+@model SportMania.Areas.Identity.Pages.Account.LoginModel
+
+@{
+    ViewData["Title"] = "Log in";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SportMania</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Arimo', sans-serif;
+        }
+        .gradient-text {
+            background: linear-gradient(90deg, #51A2FF 0%, #C27AFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .gradient-button {
+            background: linear-gradient(90deg, #155DFC 0%, #9810FA 100%);
+        }
+        .glassmorphic {
+            background: linear-gradient(135deg, rgba(16, 24, 40, 0.9) 0%, rgba(3, 7, 18, 0.9) 100%);
+            border: 1px solid #1E2939;
+        }
+        .blur-circle-blue {
+            background: #2B7FFF;
+            filter: blur(128px);
+            opacity: 0.1;
+            position: absolute;
+            border-radius: 50%;
+        }
+        .blur-circle-purple {
+            background: #AD46FF;
+            filter: blur(128px);
+            opacity: 0.1;
+            position: absolute;
+            border-radius: 50%;
+        }
+        .blur-circle-pink {
+            background: #F6339A;
+            filter: blur(128px);
+            opacity: 0.1;
+            position: absolute;
+            border-radius: 50%;
+        }
+        .button-shadow {
+            box-shadow: 0px 4px 6px -4px rgba(43, 127, 255, 0.25), 0px 10px 15px -3px rgba(43, 127, 255, 0.25);
+        }
+    </style>
+</head>
+<body class="bg-black text-white min-h-screen relative overflow-hidden">
+    <!-- Background blur effects -->
+    <div class="blur-circle-blue" style="width: 403px; height: 403px; left: 24px; top: 40px;"></div>
+    <div class="blur-circle-purple" style="width: 346px; height: 346px; right: 22px; top: 38px;"></div>
+    <div class="blur-circle-pink" style="width: 421px; height: 421px; left: 81px; bottom: -100px;"></div>
+
+    <!-- Header/Navbar -->
+    <header class="relative z-10 border-b border-gray-800 border-opacity-50" style="background: rgba(0, 0, 0, 0.5);">
+        <div class="container mx-auto px-6 py-5 flex items-center justify-between">
+            <!-- Logo and Brand -->
+            <div class="flex items-center gap-0">
+                <div class="relative w-10 h-10">
+                    <div class="absolute inset-0 rounded-lg opacity-75" style="background: linear-gradient(90deg, #2B7FFF 0%, #9810FA 100%); filter: blur(16px);"></div>
+                    <img src="~/Media/sportmania-logo.png" alt="SportManiaMY" class="relative w-10 h-10 rounded-lg object-cover" />
+                </div>
+                <h1 class="text-xl font-bold gradient-text ml-3">SportManiaMY</h1>
+            </div>
+
+            <!-- Back Button -->
+            <a href="/" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white border-opacity-10 hover:bg-white hover:bg-opacity-5 transition-all no-underline text-white" 
+               style="background: rgba(255, 255, 255, 0.05);">
+                <svg class="w-4 h-4" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3.33 3.33L8 8L3.33 12.67" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M3.33 8H12.67" stroke="currentColor" stroke-width="1.33" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span>Back</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="relative z-10 container mx-auto px-6 flex items-center justify-center" style="min-height: calc(100vh - 100px);">
+        <div class="w-full max-w-2xl glassmorphic rounded-2xl p-8 my-12">
+            <!-- Welcome heading -->
+            <h2 class="text-3xl font-bold gradient-text mb-2">Welcome Back</h2>
+            <p class="text-gray-400 mb-8">Sign in to access your account</p>
+
+            <!-- Form -->
+            <form id="account" method="post" class="space-y-6">
+                <div asp-validation-summary="ModelOnly" class="text-red-400 text-sm"></div>
+
+                <!-- Email Field -->
+                <div class="space-y-2">
+                    <label asp-for="Input.Email" class="flex items-center gap-2 text-gray-300">
+                        <img src="~/Media/email-icon.svg" alt="Email" class="w-4 h-4" />
+                        <span>Email Address</span>
+                    </label>
+                    <input asp-for="Input.Email" 
+                           class="w-full px-4 py-3 rounded-xl border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors" 
+                           style="background: rgba(30, 41, 57, 0.5);" 
+                           placeholder="name@example.com"
+                           autocomplete="username" />
+                    <span asp-validation-for="Input.Email" class="text-red-400 text-sm"></span>
+                </div>
+
+                <!-- Password Field -->
+                <div class="space-y-2">
+                    <label asp-for="Input.Password" class="flex items-center gap-2 text-gray-300">
+                        <img src="~/Media/password-icon.svg" alt="Password" class="w-4 h-4" />
+                        <span>Password</span>
+                    </label>
+                    <input asp-for="Input.Password" 
+                           type="password"
+                           class="w-full px-4 py-3 rounded-xl border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors" 
+                           style="background: rgba(30, 41, 57, 0.5);" 
+                           placeholder="Enter your password"
+                           autocomplete="current-password" />
+                    <span asp-validation-for="Input.Password" class="text-red-400 text-sm"></span>
+                </div>
+
+                <!-- Remember Me and Forgot Password -->
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <input asp-for="Input.RememberMe" type="checkbox" class="w-4 h-4 rounded bg-gray-800 border-gray-700" />
+                        <label asp-for="Input.RememberMe" class="text-sm text-gray-300 cursor-pointer">
+                            Remember me
+                        </label>
+                    </div>
+                    <a id="forgot-password" asp-page="./ForgotPassword" class="text-sm text-blue-400 hover:text-blue-300 no-underline">
+                        Forgot password?
+                    </a>
+                </div>
+
+                <!-- Sign In Button -->
+                <button type="submit" class="w-full py-3 rounded-xl text-white font-bold gradient-button button-shadow hover:opacity-90 transition-opacity">
+                    Sign In
+                </button>
+
+                <!-- Register Link -->
+                <p class="text-center text-sm text-gray-400">
+                    Don't have an account? 
+                    <a id="register-link" asp-page="./Register" asp-route-returnUrl="@Model.ReturnUrl" class="text-blue-400 font-bold hover:text-blue-300 no-underline">
+                        Register now
+                    </a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    @section Scripts {
+        <partial name="_ValidationScriptsPartial" />
+    }
+</body>
+</html>

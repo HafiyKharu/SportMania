@@ -5,10 +5,50 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - SportMania</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;700&display=swap" rel="stylesheet">
     <script type="importmap"></script>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/SportMania.styles.css" asp-append-version="true" />
+    <style>
+        .gradient-text {
+            background: linear-gradient(90deg, #51A2FF 0%, #C27AFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .gradient-button {
+            background: linear-gradient(90deg, #155DFC 0%, #9810FA 100%);
+        }
+        .glassmorphic {
+            background: linear-gradient(135deg, rgba(16, 24, 40, 0.9) 0%, rgba(3, 7, 18, 0.9) 100%);
+            border: 1px solid #1E2939;
+        }
+        .blur-circle-blue {
+            background: #2B7FFF;
+            filter: blur(128px);
+            opacity: 0.1;
+        }
+        .blur-circle-purple {
+            background: #AD46FF;
+            filter: blur(128px);
+            opacity: 0.1;
+        }
+        .blur-circle-pink {
+            background: #F6339A;
+            filter: blur(128px);
+            opacity: 0.1;
+        }
+        .button-shadow {
+            box-shadow: 0px 4px 6px -4px rgba(43, 127, 255, 0.25), 0px 10px 15px -3px rgba(43, 127, 255, 0.25);
+        }
+        body {
+            font-family: 'Arimo', sans-serif;
+        }
+    </style>
 </head>
 <body class="theme-dark">
     <header class="sticky-top w-100 bg-black">
@@ -20,7 +60,7 @@
                         <path d="M8 5v14l11-7-11-7z"></path>
                     </svg>
                 </div>
-                <span class="fs-5 fw-bold text-white">StreamFlix</span>
+                <span class="fs-5 fw-bold text-white">SportMania MY</span>
             </a>
             <ul class="navbar-nav">
                 <partial name="_LoginPartial" />
