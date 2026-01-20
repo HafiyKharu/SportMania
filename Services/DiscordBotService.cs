@@ -84,43 +84,19 @@ public class DiscordBotService : IDiscordBotService, IHostedService
                 .AddOption("key", ApplicationCommandOptionType.String, "License key", isRequired: true)
         };
 
-        _logger.LogInformation("⏳ Waiting 2 seconds before registering commands...");
-        await Task.Delay(2000);
-
-        foreach (var guild in _client.Guilds)
+        try
         {
-            try
-            {
-                _logger.LogInformation("🔄 Processing guild: {GuildName} ({GuildId})", guild.Name, guild.Id);
+            _logger.LogInformation("⏳ Registering global commands...");
 
-                // Delete old commands
-                var existingCommands = await guild.GetApplicationCommandsAsync();
-                _logger.LogInformation("📋 Found {Count} existing commands", existingCommands.Count);
+            var builtCommands = commands.Select(c => c.Build()).ToList();
+            await _client.BulkOverwriteGlobalApplicationCommandsAsync(builtCommands.ToArray());
 
-                foreach (var cmd in existingCommands)
-                {
-                    await cmd.DeleteAsync();
-                    _logger.LogInformation("🗑️ Deleted: {CommandName}", cmd.Name);
-                }
-
-                await Task.Delay(1000);
-
-                // Register new commands
-                foreach (var command in commands)
-                {
-                    await guild.CreateApplicationCommandAsync(command.Build());
-                    _logger.LogInformation("✅ Registered: {CommandName}", command.Name);
-                }
-
-                _logger.LogInformation("🎉 Successfully registered {Count} commands for {GuildName}", commands.Count, guild.Name);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "❌ Failed to register commands for guild {GuildId}", guild.Id);
-            }
+            _logger.LogInformation("🎉 Successfully registered {Count} global commands.", builtCommands.Count);
         }
-
-        _logger.LogInformation("✨ Command registration complete!");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "❌ Failed to register global commands.");
+        }
     }
 
     private async Task SlashCommandExecutedAsync(SocketSlashCommand command)
@@ -131,7 +107,7 @@ public class DiscordBotService : IDiscordBotService, IHostedService
         {
             // Create a scope to get scoped services
             using var scope = _serviceProvider.CreateScope();
-            var handler = scope.ServiceProvider.GetRequiredService<IDiscordCommandHandler>();
+            var handler = scope.ServiceProvider.GetRequiredService<IDiscordBotHandlers>();
 
             await (command.CommandName switch
             {
@@ -139,6 +115,7 @@ public class DiscordBotService : IDiscordBotService, IHostedService
                 "viewmappings" => handler.HandleViewMappingsAsync(command),
                 "removemapping" => handler.HandleRemoveMappingAsync(command),
                 "generate" => handler.HandleGenerateAsync(command),
+                "redeem" => handler.HandleRedeemAsync(command),
                 _ => command.RespondAsync("❌ Unknown command.", ephemeral: true)
             });
 

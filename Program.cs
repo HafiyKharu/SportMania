@@ -38,31 +38,33 @@ builder.Services.AddScoped<IPlanRoleMappingRepository, PlanRoleMappingRepository
 
 // Add handlers
 builder.Services.AddScoped<IToyyibPayHandler, ToyyibPayHandler>();
-builder.Services.AddScoped<IDiscordCommandHandler, DiscordCommandHandler>();
+builder.Services.AddTransient<IDiscordBotHandlers, DiscordCommandHandler>();
 
 // Add services
 builder.Services.AddScoped<IKeyService, KeyService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 
-// Register DiscordSocketClient as singleton
-builder.Services.AddSingleton<DiscordSocketClient>(provider =>
-{
-    var config = new DiscordSocketConfig
-    {
-        GatewayIntents = GatewayIntents.Guilds |
-                        GatewayIntents.GuildMessages |
-                        GatewayIntents.MessageContent |
-                        GatewayIntents.GuildMembers
-    };
-    return new DiscordSocketClient(config);
-});
-
-// Register bot service as singleton
-builder.Services.AddSingleton<IDiscordBotService, DiscordBotService>();
+// Conditionally register Discord bot services
 if (builder.Configuration.GetValue<bool>("DiscordBot:Enabled"))
 {
+    // Register DiscordSocketClient as singleton
+    builder.Services.AddSingleton<DiscordSocketClient>(provider =>
+    {
+        var config = new DiscordSocketConfig
+        {
+            GatewayIntents = GatewayIntents.Guilds |
+                            GatewayIntents.GuildMessages |
+                            GatewayIntents.MessageContent |
+                            GatewayIntents.GuildMembers
+        };
+        return new DiscordSocketClient(config);
+    });
+
+    // Register bot service as singleton and as a hosted service to start it
+    builder.Services.AddSingleton<IDiscordBotService, DiscordBotService>();
     builder.Services.AddHostedService(provider => (DiscordBotService)provider.GetRequiredService<IDiscordBotService>());
 }
+
 // Add hosted service for license expiration
 builder.Services.AddHostedService<LicenseExpirationService>();
 

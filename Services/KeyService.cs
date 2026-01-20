@@ -28,10 +28,24 @@ public class KeyService : IKeyService
             await _guildRepository.CreateAsync(guild);
         }
 
+        string licenseKey;
+        int maxRetries = 10;
+        int retryCount = 0;
+        do
+        {
+            if (retryCount >= maxRetries)
+            {
+                _logger.LogError("Failed to generate a unique license key after {MaxRetries} attempts.", maxRetries);
+                throw new InvalidOperationException("Could not generate a unique license key.");
+            }
+            licenseKey = GenerateLicenseKey();
+            retryCount++;
+        } while (await _keyRepository.GetByLicenseKeyAsync(licenseKey) != null);
+
         var newKey = new Key
         {
             KeyId = Guid.NewGuid(),
-            LicenseKey = GenerateLicenseKey(),
+            LicenseKey = licenseKey,
             GuildId = guildId,
             PlanId = planId,
             DurationDays = durationDays,
@@ -39,100 +53,7 @@ public class KeyService : IKeyService
             CreatedAt = DateTime.UtcNow
         };
 
-        // This line was missing. It saves the key to the database.
         return await _keyRepository.CreateAsync(newKey);
-    }
-
-    public async Task<IEnumerable<Key>> GenerateKeysAsync(ulong guildId, Guid planId, int amount, int durationDays)
-    {
-        var keys = new List<Key>();
-        for (int i = 0; i < amount; i++)
-        {
-            var key = await GenerateKeyAsync(guildId, planId, durationDays);
-            keys.Add(key);
-        }
-        return keys;
-    }
-
-    public async Task<Key?> GetByIdAsync(Guid id)
-    {
-        return await _keyRepository.GetByIdAsync(id);
-    }
-
-    public async Task<Key?> GetByLicenseKeyAsync(string licenseKey)
-    {
-        return await _keyRepository.GetByLicenseKeyAsync(licenseKey);
-    }
-
-    public async Task<Key?> GetByLicenseKeyAndGuildAsync(string licenseKey, ulong guildId)
-    {
-        return await _keyRepository.GetByLicenseKeyAndGuildAsync(licenseKey, guildId);
-    }
-
-    public async Task<IEnumerable<Key>> GetByGuildIdAsync(ulong guildId)
-    {
-        return await _keyRepository.GetByGuildIdAsync(guildId);
-    }
-
-    public async Task<IEnumerable<Key>> GetActiveKeysByGuildIdAsync(ulong guildId)
-    {
-        return await _keyRepository.GetActiveKeysByGuildIdAsync(guildId);
-    }
-
-    public async Task<Key?> GetByUserIdAndGuildAsync(ulong userId, ulong guildId)
-    {
-        return await _keyRepository.GetByUserIdAndGuildAsync(userId, guildId);
-    }
-
-    public async Task<Key?> RedeemKeyAsync(string licenseKey, ulong guildId, ulong userId)
-    {
-        var key = await _keyRepository.GetByLicenseKeyAndGuildAsync(licenseKey, guildId);
-        
-        if (key == null)
-        {
-            _logger.LogWarning("Redeem failed: Key '{LicenseKey}' not found or does not belong to guild {GuildId}.", licenseKey, guildId);
-            return null;
-        }
-
-        if (!key.IsActive)
-        {
-            _logger.LogWarning("Redeem failed: Key '{LicenseKey}' is not active.", licenseKey);
-            return null;
-        }
-
-        if (key.RedeemedByUserId != null)
-        {
-            _logger.LogWarning("Redeem failed: Key '{LicenseKey}' has already been redeemed by user {UserId}.", licenseKey, key.RedeemedByUserId);
-            return null;
-        }
-
-        key.RedeemedByUserId = userId;
-        key.RedeemedAt = DateTime.UtcNow;
-        key.ExpiresAt = DateTime.UtcNow.AddDays(key.DurationDays);
-        
-        await _keyRepository.UpdateAsync(key);
-        _logger.LogInformation("Key '{LicenseKey}' successfully redeemed by user {UserId} in guild {GuildId}.", licenseKey, userId, guildId);
-        return key;
-    }
-
-    public async Task RevokeKeyAsync(Guid keyId)
-    {
-        var key = await _keyRepository.GetByIdAsync(keyId);
-        if (key != null)
-        {
-            key.IsActive = false;
-            await _keyRepository.UpdateAsync(key);
-        }
-    }
-
-    public async Task DeleteKeyAsync(Guid id)
-    {
-        await _keyRepository.DeleteAsync(id);
-    }
-
-    public async Task DeleteExpiredKeysAsync()
-    {
-        await _keyRepository.DeleteExpiredKeysAsync();
     }
 
     private static string GenerateLicenseKey()

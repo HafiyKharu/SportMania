@@ -7,8 +7,8 @@ public class Transaction : IHasAuditTimestamps
     public Guid TransactionId { get; set; }
     public Guid CustomerId { get; set; }
     public Guid PlanId { get; set; }
-    public Guid? KeyId { get; set; } // Link to generated key
-    public ulong GuildId { get; set; } // Discord Guild ID
+    public Guid? KeyId { get; set; }
+    public ulong GuildId { get; set; }
     public string Amount { get; set; } = string.Empty;
     public string PaymentStatus { get; set; } = "Pending";
     public string? BillCode { get; set; }

@@ -35,58 +35,37 @@ namespace SportMania.Services
         {
             try
             {
-                // Get or create customer
-                var customer = await _customerRepository.GetCustomerByEmailAsync(req.Email)
-                               ?? await _customerRepository.CreateCustomerAsync(new Customer { Email = req.Email });
-
-                // Get plan
-                var plan = await _planRepository.GetByIdAsync(req.PlanId);
-                if (plan == null) 
-                    return (false, "Plan not found.");
-
-                // Parse the duration from the plan
-                if (!int.TryParse(plan.Duration, out int durationDays))
-                {
-                    return (false, $"Invalid duration format for plan {plan.Name}.");
-                }
-
                 // Generate key with guild ID and correct duration from the plan
-                var guildIdString = _configuration["GuildsID:CREED"];
-                if (string.IsNullOrEmpty(guildIdString))
-                    return (false, "Guild ID not configured.");
-                
-                if (!ulong.TryParse(guildIdString, out ulong guildId))
-                    return (false, "Invalid Guild ID format.");
-                var key = await _keyService.GenerateKeyAsync(guildId, req.PlanId, durationDays);
+                var guildIdString = _configuration["Discord:DefaultGuildId"] ?? throw new Exception("Default Guild ID not configured. Please set 'Discord:DefaultGuildId' in configuration.");
 
                 // Create pending transaction
                 var transaction = new Transaction
                 {
-                    Customer = customer,
-                    Plan = plan,
-                    Amount = plan.Price.ToString(),
-                    Key = key,
+                    Customer = await _customerRepository.GetCustomerByEmailAsync(req.Email)
+                               ?? await _customerRepository.CreateCustomerAsync(new Customer { Email = req.Email }),
+                    Plan =  await _planRepository.GetByIdAsync(req.PlanId) ?? throw new Exception("Plan not found."),
                     PaymentStatus = "Pending",
                 };
-
+                transaction.Amount = transaction.Plan.Price.ToString();
+                transaction.Key = await _keyService.GenerateKeyAsync(ulong.Parse(guildIdString), req.PlanId, int.Parse(transaction.Plan.Duration));
                 var createdTransaction = await _transactionRepository.CreateTransactionAsync(transaction);
 
                 // Prepare ToyyibPay request
-                var categoryCode = _toyyibPayHandler.GetCategoryCode(plan.Name);
+                var categoryCode = _toyyibPayHandler.GetCategoryCode(transaction.Plan.Name);
                 var finalReturnUrl = $"{returnUrl}?transactionId={createdTransaction.TransactionId}";
-                var billAmount = ConvertPriceToCents(plan.Price);
+                var billAmount = ConvertPriceToCents(transaction.Plan.Price);
 
                 var toyyibPayRequest = _toyyibPayHandler.BuildRequest(
                     categoryCode: categoryCode,
-                    billName: plan.Name,
-                    billDescription: $"Subscription for {plan.Name}",
+                    billName: transaction.Plan.Name,
+                    billDescription: $"Subscription for {transaction.Plan.Name}",
                     billAmount: billAmount,
                     returnUrl: finalReturnUrl,
                     externalReferenceNo: createdTransaction.TransactionId.ToString(),
-                    customerEmail: customer.Email,
+                    customerEmail: transaction.Customer.Email,
                     customerPhone: phone ?? "0123456789",
-                    plan: plan,
-                    key: key
+                    plan: transaction.Plan,
+                    key: transaction.Key
                 );
 
                 // Call ToyyibPay API
