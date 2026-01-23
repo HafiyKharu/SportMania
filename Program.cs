@@ -38,7 +38,7 @@ builder.Services.AddScoped<IPlanRoleMappingRepository, PlanRoleMappingRepository
 
 // Add handlers
 builder.Services.AddScoped<IToyyibPayHandler, ToyyibPayHandler>();
-builder.Services.AddTransient<IDiscordBotHandlers, DiscordCommandHandler>();
+builder.Services.AddScoped<IDiscordBotHandlers, DiscordCommandHandler>();
 
 // Add services
 builder.Services.AddScoped<IKeyService, KeyService>();

@@ -33,13 +33,13 @@ public class KeyService : IKeyService
         int retryCount = 0;
         do
         {
-            if (retryCount >= maxRetries)
+            licenseKey = GenerateLicenseKey();
+            retryCount++;
+            if (retryCount > maxRetries)
             {
                 _logger.LogError("Failed to generate a unique license key after {MaxRetries} attempts.", maxRetries);
                 throw new InvalidOperationException("Could not generate a unique license key.");
             }
-            licenseKey = GenerateLicenseKey();
-            retryCount++;
         } while (await _keyRepository.GetByLicenseKeyAsync(licenseKey) != null);
 
         var newKey = new Key

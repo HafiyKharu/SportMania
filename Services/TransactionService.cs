@@ -43,11 +43,17 @@ namespace SportMania.Services
                 {
                     Customer = await _customerRepository.GetCustomerByEmailAsync(req.Email)
                                ?? await _customerRepository.CreateCustomerAsync(new Customer { Email = req.Email }),
-                    Plan =  await _planRepository.GetByIdAsync(req.PlanId) ?? throw new Exception("Plan not found."),
+                    Plan = await _planRepository.GetByIdAsync(req.PlanId) ?? throw new Exception("Plan not found."),
                     PaymentStatus = "Pending",
                 };
                 transaction.Amount = transaction.Plan.Price.ToString();
-                transaction.Key = await _keyService.GenerateKeyAsync(ulong.Parse(guildIdString), req.PlanId, int.Parse(transaction.Plan.Duration));
+                
+                if (!int.TryParse(transaction.Plan.Duration, out var duration))
+                {
+                    throw new FormatException("Invalid plan duration format.");
+                }
+                
+                transaction.Key = await _keyService.GenerateKeyAsync(ulong.Parse(guildIdString), req.PlanId, duration);
                 var createdTransaction = await _transactionRepository.CreateTransactionAsync(transaction);
 
                 // Prepare ToyyibPay request

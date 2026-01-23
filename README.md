@@ -48,12 +48,9 @@ SportMania Bot is a comprehensive solution for managing subscriptions and digita
         "BotToken": "ABCD.ABCD.ABCD"
     },
     "DiscordBot": {
-            "Enabled": true // false 
+            "Enabled": true
     },
-    "GuildsID": 
-    {
-        "DefaultGuildId": 1234
-    }
+    "DefaultGuildId": 12341234
     }
     ```
 
