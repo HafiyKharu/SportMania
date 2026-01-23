@@ -143,7 +143,6 @@ public class DiscordCommandHandler : IDiscordBotHandlers
         }
 
         var planName = command.Data.Options.First(o => o.Name == "plan").Value.ToString()!;
-        var amount = (long?)command.Data.Options.FirstOrDefault(o => o.Name == "amount")?.Value ?? 1;
 
         var plans = await planRepo.GetAllAsync();
         var plan = plans.FirstOrDefault(p => p.Name.Equals(planName, StringComparison.OrdinalIgnoreCase));
@@ -162,23 +161,18 @@ public class DiscordCommandHandler : IDiscordBotHandlers
             durationDays = DefaultKeyDurationDays;
         }
 
-        var generatedKeys = new List<Key>();
-        for (int i = 0; i < amount; i++)
-        {
-            var key = await keyService.GenerateKeyAsync(command.GuildId!.Value, plan.PlanId, durationDays);
-            generatedKeys.Add(key);
-        }
+        var generatedKey = await keyService.GenerateKeyAsync(command.GuildId!.Value, plan.PlanId, durationDays);
 
         var embed = new EmbedBuilder()
-            .WithTitle($"🔑 {plan.Name} Keys Generated")
+            .WithTitle($"🔑 {plan.Name} Key Generated")
             .WithColor(Color.Green)
-            .WithDescription($"Generated {amount} key(s) for **{plan.Name}** ({durationDays} days)")
-            .AddField("Keys", string.Join("\n", generatedKeys.Select(k => $"`{k.LicenseKey}`")))
+            .WithDescription($"Generated key for **{plan.Name}** ({durationDays} days)")
+            .AddField("Key", $"`{generatedKey.LicenseKey}`")
             .WithTimestamp(DateTimeOffset.Now)
             .Build();
 
         await command.RespondAsync(embed: embed, ephemeral: true);
-        await LogToChannelAsync(command.GuildId!.Value, guildRepo, $"🔑 {command.User} generated {amount} {plan.Name} key(s)");
+        await LogToChannelAsync(command.GuildId!.Value, guildRepo, $"🔑 {command.User} generated {plan.Name} key");
     }
 
     public async Task HandleRedeemAsync(SocketSlashCommand command)
@@ -208,6 +202,12 @@ public class DiscordCommandHandler : IDiscordBotHandlers
         if (key == null)
         {
             await command.RespondAsync("Invalid license key.", ephemeral: true);
+            return;
+        }
+
+        if (!key.IsActive)
+        {
+            await command.RespondAsync("This license key is not active.", ephemeral: true);
             return;
         }
 

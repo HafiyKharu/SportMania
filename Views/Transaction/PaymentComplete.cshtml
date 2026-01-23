@@ -15,7 +15,7 @@
                         <hr>
                         <p>Here is your key to access the Discord server:</p>
                         <div class="alert alert-info">
-                            <strong>@Model.Key.LicenseKey</strong>
+                            <strong>@Model.Key?.LicenseKey</strong>
                         </div>
                         <p class="text-white small">Please save this key. You will need it to get your role in our Discord server.</p>
                         <a asp-controller="Home" asp-action="Index" class="btn btn-primary mt-3">Back to Home</a>

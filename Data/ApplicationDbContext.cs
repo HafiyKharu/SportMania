@@ -80,16 +80,30 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<DiscordGuild>(entity =>
         {
+            entity.HasKey(e => e.GuildId);
+
+            entity.Property(e => e.GuildId)
+                .ValueGeneratedNever();
+
             entity.Property(e => e.Prefix)
                 .HasDefaultValue("!");
-
-            entity.Property(e => e.CreatedAt)
-                .ValueGeneratedOnAdd()
-                .HasDefaultValueSql("now() at time zone 'utc'");
         });
 
         builder.Entity<Key>(entity =>
         {
+            entity.HasKey(e => e.KeyId);
+            entity.HasIndex(e => e.LicenseKey).IsUnique();
+
+            entity.HasOne(e => e.Guild)
+                  .WithMany()
+                  .HasForeignKey(e => e.GuildId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Plan)
+                  .WithMany()
+                  .HasForeignKey(e => e.PlanId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
             entity.Property(e => e.KeyId)
                 .ValueGeneratedOnAdd()
                 .HasDefaultValueSql("gen_random_uuid()");
@@ -117,11 +131,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
             entity.Property(e => e.MappingId)
                 .ValueGeneratedOnAdd()
-                .HasDefaultValueSql("newid()");
+                .HasDefaultValueSql("gen_random_uuid()");
 
             entity.Property(e => e.CreatedAt)
                 .ValueGeneratedOnAdd()
-                .HasDefaultValueSql("GETUTCDATE()");
+                .HasDefaultValueSql("now() at time zone 'utc'");
         });
 
         // Seed Plans
