@@ -1,64 +1,119 @@
-# SportMania Bot
+# SportMania
 
-## Description
+SportMania is a subscription + payment + Discord role access system.
 
-SportMania Bot is a comprehensive solution for managing subscriptions and digital content access through Discord. It integrates with the ToyyibPay payment gateway to handle transactions and automatically assigns Discord roles to users based on their active subscription plans. The bot is managed via slash commands within your Discord server.
+- Backend: ASP.NET Core Web API + EF Core (PostgreSQL) + ToyyibPay integration + optional Discord bot
+- Frontend: Blazor (Interactive Server) UI for Plans, Transactions, and payment result pages
 
-## Features
+## Latest Updates
 
--   **Discord Slash Commands:** Easy-to-use commands for managing the bot.
--   **Plan & Role Management:** Map subscription plans to specific Discord roles.
--   **License Key Generation:** Admins can generate license keys for different plans.
--   **Key Redemption:** Users can redeem license keys to gain access.
--   **Payment Integration:** Seamlessly handles payments using ToyyibPay.
--   **Automated Role Assignment:** Automatically grants and (in the future) revokes roles based on subscription status.
+- Payment flow fixed to use strongly-typed DTOs (no JsonElement runtime errors)
+- ToyyibPay callback now redirects to Frontend success/failed pages (instead of stopping on Backend API route)
+- Key endpoints + service added to retrieve license keys by transaction
+- Plan image upload is Frontend-only:
+    - files are saved under Frontend/wwwroot/Media
+    - the database stores a relative path like Media/your-image.png
+- Development quality-of-life:
+    - dotnet watch can reload when Media files change; the Frontend project excludes wwwroot/Media from watch
 
-## Setup and Configuration
+## Repository Layout
 
-1.  **Prerequisites:**
-    *   .NET 10 SDK
-    *   PostgreSQL Database
-    *   A Discord Bot application with a token.
+- Backend/: Web API, DB access, ToyyibPay callback handling, Discord bot services
+- Frontend/: Blazor UI, file uploads to wwwroot/Media, API services calling Backend
 
-2.  **Configuration:**
-    Update the `appsettings.json` file with your specific settings.
+## Prerequisites
 
-    ```json
-    {
+- .NET 10 SDK
+- PostgreSQL database
+- ToyyibPay account (sandbox or production)
+- Discord bot token (optional; only if you enable the bot)
+
+## Configuration
+
+### Backend configuration
+
+Update Backend/appsettings.json or (recommended) use dotnet user-secrets.
+
+Minimal example (do not commit real secrets):
+
+```json
+{
     "ConnectionStrings": {
         "DefaultConnection": "Host=localhost;Database=sportmania;Username=postgres;Password=your_password"
     },
-    "Logging": {
-        "LogLevel": {
-        "Default": "Information",
-        "Microsoft.AspNetCore": "Warning"
-        }
-    },
-    "AllowedHosts": "*",
     "ToyyibPay": {
-        "UserSecretKey": "ABCD",
+        "UserSecretKey": "YOUR_TOYYIBPAY_SECRET",
         "CategoryCodes": {
-        "Seasonal": "ABCD",
-        "Daily": "ABCD",
-        "Monthly": "ABCD",
-        "Weekly": "ABCD"
+            "Seasonal": "YOUR_CATEGORY_CODE",
+            "Daily": "YOUR_CATEGORY_CODE",
+            "Monthly": "YOUR_CATEGORY_CODE",
+            "Weekly": "YOUR_CATEGORY_CODE"
         }
     },
     "Discord": {
-        "BotToken": "ABCD.ABCD.ABCD"
+        "BotToken": "YOUR_DISCORD_BOT_TOKEN"
     },
     "DiscordBot": {
-            "Enabled": true
+        "Enabled": true
     },
     "DefaultGuildId": 12341234
-    }
-    ```
+}
+```
 
-3.  **Run the Application:**
-    Use the .NET CLI to run the application. The bot will automatically connect to Discord if `DiscordBot:Enabled` is set to `true`.
-    ```bash
-    dotnet run
-    ```
+### Frontend API base URL
+
+Frontend reads ApiBaseUrl (defaults to http://localhost:5235).
+
+## Run (Development)
+
+### 1) Start Backend
+
+```bash
+dotnet run --project Backend/SportMania.csproj
+```
+
+### 2) Start Frontend
+
+```bash
+dotnet run --project Frontend/BlazorApp.csproj
+```
+
+## dotnet watch notes (important for image upload)
+
+When you upload an image, the app writes a file into Frontend/wwwroot/Media.
+dotnet watch treats that as a file change and triggers Browser Refresh / Hot Reload, which looks like a full page reload.
+
+Recommended options:
+
+- Run without hot reload:
+
+```bash
+dotnet watch run --project Frontend/BlazorApp.csproj --no-hot-reload
+```
+
+- Or keep watch but ignore the upload folder (already configured in Frontend/BlazorApp.csproj):
+
+```xml
+<ItemGroup>
+    <Watch Remove="wwwroot/Media/**" />
+</ItemGroup>
+```
+
+## Plan image rules
+
+- Upload destination: Frontend/wwwroot/Media/
+- Value saved to database: Media/<filename.ext>
+- UI preview: <img src="@plan.ImageUrl" ... />
+
+## Payment flow (high level)
+
+1. Frontend calls Backend to initiate payment
+2. Backend creates a ToyyibPay bill and returns redirectUrl
+3. User pays on ToyyibPay
+4. ToyyibPay calls Backend callback endpoint
+5. Backend updates the transaction and redirects user to Frontend:
+     - /transactions/success/{transactionId}
+     - /transactions/failed/{transactionId}
 
 ## Discord Commands
 
@@ -66,60 +121,60 @@ The following slash commands are available for managing the bot.
 
 ---
 
-### `/setuproles`
+### /setuproles
 
 Maps a subscription plan to a Discord role. Users who purchase or redeem a key for this plan will be granted the specified role.
 
--   **Syntax:** `/setuproles plan:<Plan Name> role:<@Role>`
--   **Permissions:** Administrator only.
+- Syntax: /setuproles plan:<Plan Name> role:<@Role>
+- Permissions: Administrator only
 
--   **Examples:**
-    -   `/setuproles plan:Season Pass role:@Season Pass Holder`
-    -   `/setuproles plan:Monthly Plan role:@Subscriber`
-    -   `/setuproles plan:Weekly Pass role:@Weekly User`
+Examples:
+- /setuproles plan:Season Pass role:@Season Pass Holder
+- /setuproles plan:Monthly Plan role:@Subscriber
+- /setuproles plan:Weekly Pass role:@Weekly User
 
 ---
 
-### `/viewmappings`
+### /viewmappings
 
 Displays all current plan-to-role mappings for the server.
 
--   **Syntax:** `/viewmappings`
--   **Permissions:** Administrator only.
+- Syntax: /viewmappings
+- Permissions: Administrator only
 
 ---
 
-### `/removemapping`
+### /removemapping
 
 Removes an existing plan-to-role mapping.
 
--   **Syntax:** `/removemapping plan:<Plan Name>`
--   **Permissions:** Administrator only.
+- Syntax: /removemapping plan:<Plan Name>
+- Permissions: Administrator only
 
--   **Example:**
-    -   `/removemapping plan:Weekly Pass`
+Example:
+- /removemapping plan:Weekly Pass
 
 ---
 
-### `/generate`
+### /generate
 
 Generates one or more license keys for a specific plan.
 
--   **Syntax:** `/generate plan:<Plan Name> amount:[Number]`
--   **Permissions:** Administrator only.
+- Syntax: /generate plan:<Plan Name> amount:[Number]
+- Permissions: Administrator only
 
--   **Examples:**
-    -   `/generate plan:Monthly Plan amount:10` (Generates 10 keys)
-    -   `/generate plan:Season Pass` (Generates 1 key)
+Examples:
+- /generate plan:Monthly Plan amount:10 (Generates 10 keys)
+- /generate plan:Season Pass (Generates 1 key)
 
 ---
 
-### `/redeem`
+### /redeem
 
 Allows a user to redeem a license key to gain access and the associated role.
 
--   **Syntax:** `/redeem key:<License Key>`
--   **Permissions:** All users.
+- Syntax: /redeem key:<License Key>
+- Permissions: All users
 
--   **Example:**
-    -   `/redeem key:ABCD-EFGH-IJKL-MNOP-QRST`
+Example:
+- /redeem key:ABCD-EFGH-IJKL-MNOP-QRST
