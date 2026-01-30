@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SportMania.Data;
@@ -6,12 +5,15 @@ using SportMania.Models;
 
 namespace SportMania.Controllers;
 
-public class HomeController : Controller
+[ApiController]
+[Route("api/[controller]")]
+public class HomeController : ControllerBase
 {
     private readonly ApplicationDbContext _db;
     public HomeController(ApplicationDbContext db) => _db = db;
 
-    public async Task<IActionResult> Index()
+    [HttpGet("plans")]
+    public async Task<ActionResult<IEnumerable<Plan>>> GetPlans()
     {
         var plans = await _db.Plans
             .AsNoTracking()
@@ -19,19 +21,9 @@ public class HomeController : Controller
             .OrderBy(p => p.Name)
             .ToListAsync();
 
-        return View(plans);
+        return Ok(plans);
     }
 
-    public IActionResult Privacy()
-    {
-        return View();
-    }
-
-    public IActionResult Plan() => RedirectToAction(nameof(Index));
-
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-    }
+    [HttpGet("health")]
+    public IActionResult Health() => Ok(new { status = "ok" });
 }

@@ -4,7 +4,9 @@ using SportMania.Repository.Interface;
 
 namespace SportMania.Controllers;
 
-public class PlanController : Controller
+[ApiController]
+[Route("api/plans")]
+public class PlanController : ControllerBase
 {
     private readonly IPlanRepository _planRepository;
 
@@ -13,33 +15,15 @@ public class PlanController : Controller
         _planRepository = planRepository;
     }
 
-    public async Task<IActionResult> Index()
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<Plan>>> GetAll()
     {
         var plans = await _planRepository.GetAllAsync();
-        return View(plans);
+        return Ok(plans);
     }
 
-    public IActionResult Create()
-    {
-        ViewBag.MediaFiles = GetMediaPaths();
-        return View();
-    }
-
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Plan plan)
-    {
-        if (ModelState.IsValid)
-        {
-            await _planRepository.AddAsync(plan);
-            return RedirectToAction(nameof(Index));
-        }
-
-        ViewBag.MediaFiles = GetMediaPaths();
-        return View(plan);
-    }
-
-    public async Task<IActionResult> Edit(Guid id)
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<Plan>> GetById(Guid id)
     {
         var plan = await _planRepository.GetByIdAsync(id);
         if (plan == null)
@@ -47,55 +31,39 @@ public class PlanController : Controller
             return NotFound();
         }
 
-        ViewBag.MediaFiles = GetMediaPaths();
-        return View(plan);
+        return Ok(plan);
     }
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(Guid id, Plan plan)
+    public async Task<ActionResult<Plan>> Create([FromBody] Plan plan)
+    {
+        await _planRepository.AddAsync(plan);
+        return CreatedAtAction(nameof(GetById), new { id = plan.PlanId }, plan);
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] Plan plan)
     {
         if (id != plan.PlanId)
         {
-            return NotFound();
+            return BadRequest(new { error = "Mismatched plan id." });
         }
 
-        if (ModelState.IsValid)
-        {
-            await _planRepository.UpdateAsync(plan);
-            return RedirectToAction(nameof(Index));
-        }
-
-        ViewBag.MediaFiles = GetMediaPaths();
-        return View(plan);
+        await _planRepository.UpdateAsync(plan);
+        return NoContent();
     }
 
-    public async Task<IActionResult> Details(Guid id)
-    {
-        var plan = await _planRepository.GetByIdAsync(id);
-        if (plan == null)
-        {
-            return NotFound();
-        }
-        return View(plan);
-    }
-
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        var plan = await _planRepository.GetByIdAsync(id);
-        if (plan == null)
-        {
-            return NotFound();
-        }
-        return View(plan);
+        await _planRepository.DeleteAsync(id);
+        return NoContent();
     }
 
-    [HttpPost, ActionName("Delete")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(Guid id)
+    [HttpGet("media")]
+    public ActionResult<IEnumerable<string>> GetMedia()
     {
-        await _planRepository.DeleteAsync(id);
-        return RedirectToAction(nameof(Index));
+        return Ok(GetMediaPaths());
     }
 
     private static readonly string[] ImageExtensions = new[] { ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg" };

@@ -3,8 +3,11 @@ using SportMania.Models.Requests;
 using SportMania.Repository.Interface;
 using SportMania.Services.Interface;
 
-[Route("[controller]")]
-public class TransactionController : Controller
+namespace SportMania.Controllers;
+
+[ApiController]
+[Route("api/transactions")]
+public class TransactionController : ControllerBase
 {
     private readonly ITransactionService _transactionService;
     private readonly IPlanRepository _planRepository;
@@ -20,8 +23,8 @@ public class TransactionController : Controller
         _transactionRepository = transactionRepository;
     }
 
-    [HttpPost("InitiatePayment")]
-    public async Task<IActionResult> InitiatePayment([FromForm] RequestTransaction req, [FromForm] string Phone)
+    [HttpPost("initiate-payment")]
+    public async Task<IActionResult> InitiatePayment([FromBody] RequestInitiatePayment req)
     {
         try
         {
@@ -33,9 +36,15 @@ public class TransactionController : Controller
             if (string.IsNullOrEmpty(baseUrl))
                 return StatusCode(500, "Could not generate payment callback URL.");
 
-            var (isSuccess, result) = await _transactionService.InitiatePaymentAsync(req, Phone, baseUrl);
+            var requestTransaction = new RequestTransaction
+            {
+                Email = req.Email,
+                PlanId = req.PlanId
+            };
 
-            return isSuccess ? Redirect(result) : BadRequest(result);
+            var (isSuccess, result) = await _transactionService.InitiatePaymentAsync(requestTransaction, req.Phone, baseUrl);
+
+            return isSuccess ? Ok(new { redirectUrl = result }) : BadRequest(new { error = result });
         }
         catch (Exception ex)
         {
@@ -43,7 +52,7 @@ public class TransactionController : Controller
         }
     }
 
-    [HttpGet("PaymentCallback")]
+    [HttpGet("payment-callback")]
     public async Task<IActionResult> PaymentCallback(Guid transactionId, string status_id)
     {
         try
@@ -53,9 +62,11 @@ public class TransactionController : Controller
             if (transaction == null)
                 return NotFound("Transaction not found.");
 
-            return transaction.PaymentStatus == "Success"
-                ? RedirectToAction("PaymentComplete", "Transaction", new { transactionId = transaction.TransactionId })
-                : RedirectToAction("PaymentFailed", "Transaction", new { transactionId = transaction.TransactionId });
+            return Ok(new
+            {
+                transactionId = transaction.TransactionId,
+                status = transaction.PaymentStatus
+            });
         }
         catch (Exception ex)
         {
@@ -63,13 +74,13 @@ public class TransactionController : Controller
         }
     }
 
-    [HttpGet("Index")]
-    public async Task<IActionResult> Index()
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
     {
         try
         {
             var transactions = await _transactionRepository.GetAllTransactionsAsync();
-            return View(transactions);
+            return Ok(transactions);
         }
         catch (Exception ex)
         {
@@ -77,8 +88,8 @@ public class TransactionController : Controller
         }
     }
 
-    [HttpGet("PaymentComplete/{transactionId}")]
-    public async Task<IActionResult> PaymentComplete(Guid transactionId)
+    [HttpGet("{transactionId:guid}")]
+    public async Task<IActionResult> GetById(Guid transactionId)
     {
         try
         {
@@ -87,25 +98,7 @@ public class TransactionController : Controller
             if (transaction == null)
                 return NotFound("Transaction not found.");
 
-            return View(transaction);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Internal server error: {ex.Message}");
-        }
-    }
-
-    [HttpGet("PaymentFailed/{transactionId}")]
-    public async Task<IActionResult> PaymentFailed(Guid transactionId)
-    {
-        try
-        {
-            var transaction = await _transactionRepository.GetTransactionByIdAsync(transactionId);
-
-            if (transaction == null)
-                return NotFound("Transaction not found.");
-
-            return View(transaction);
+            return Ok(transaction);
         }
         catch (Exception ex)
         {
