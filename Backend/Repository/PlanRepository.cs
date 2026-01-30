@@ -25,7 +25,10 @@ public class PlanRepository : IPlanRepository
 
     public async Task<IEnumerable<Plan>> GetAllAsync()
     {
-        return await _db.Plans.AsNoTracking().ToListAsync();
+        return await _db.Plans.AsNoTracking()
+            .Include(p => p.Details)
+            .AsNoTracking()
+            .ToListAsync();
     }
 
     public async Task AddAsync(Plan plan)
