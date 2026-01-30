@@ -18,13 +18,13 @@ public class TransactionService : ITransactionService
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadFromJsonAsync<dynamic>();
-                return (true, result?.redirectUrl?.ToString(), null);
+                var result = await response.Content.ReadFromJsonAsync<PaymentResponseDto>();
+                return (true, result?.RedirectUrl, null);
             }
             else
             {
-                var error = await response.Content.ReadFromJsonAsync<dynamic>();
-                return (false, null, error?.error?.ToString() ?? "Payment initiation failed.");
+                var error = await response.Content.ReadFromJsonAsync<ErrorResponseDto>();
+                return (false, null, error?.Error ?? "Payment initiation failed.");
             }
         }
         catch (Exception ex)

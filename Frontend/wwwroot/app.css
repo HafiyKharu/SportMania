@@ -58,3 +58,99 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+/* Home Page Styles */
+body {
+    background-color: #0d1117;
+    color: #c9d1d9;
+}
+
+.text-gradient {
+    background: linear-gradient(90deg, #0d6efd 0%, #6610f2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero {
+    background: linear-gradient(180deg, rgba(13,110,253,0.1) 0%, rgba(13,17,23,0) 100%);
+    padding: 3rem 0 !important;
+}
+
+.card {
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 10px 30px rgba(13,110,253,0.3) !important;
+}
+
+.card.border-primary {
+    border: 2px solid #0d6efd !important;
+    box-shadow: 0 0 20px rgba(13,110,253,0.2);
+}
+
+.bg-black {
+    background-color: #0d1117 !important;
+}
+
+.text-light {
+    color: #f0f6fc !important;
+}
+
+.text-secondary {
+    color: #8b949e !important;
+}
+
+.border-secondary {
+    border-color: #30363d !important;
+}
+
+.btn-secondary {
+    background-color: #21262d;
+    border-color: #30363d;
+    color: #c9d1d9;
+}
+
+.btn-secondary:hover {
+    background-color: #30363d;
+    border-color: #484f58;
+    color: #f0f6fc;
+}
+
+.btn-close-white {
+    filter: invert(1) grayscale(100%) brightness(200%);
+}
+
+.modal-content {
+    background-color: #161b22 !important;
+    border: 1px solid #30363d !important;
+}
+
+.form-control {
+    background-color: #0d1117;
+    border-color: #30363d;
+    color: #c9d1d9;
+}
+
+.form-control:focus {
+    background-color: #0d1117;
+    border-color: #0d6efd;
+    color: #c9d1d9;
+    box-shadow: 0 0 0 0.25rem rgba(13,110,253,0.25);
+}
+
+.form-control::placeholder {
+    color: #6e7681;
+}
+
+.form-label {
+    color: #c9d1d9;
+}
+
+.badge {
+    font-weight: 500;
+}

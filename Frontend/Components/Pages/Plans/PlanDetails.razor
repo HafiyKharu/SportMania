@@ -1,0 +1,111 @@
+@page "/plans/details/{Id:guid}"
+@using BlazorApp.Services
+@inject IPlanService PlanService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Plan Details</PageTitle>
+
+<h2 class="text-light mb-4">Plan Details</h2>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@if (plan == null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-secondary mt-3">Loading plan...</p>
+    </div>
+}
+else
+{
+    <div class="card shadow-sm bg-black text-white border-secondary" style="max-width: 540px;">
+        <div class="row g-0">
+            @if (!string.IsNullOrWhiteSpace(plan.ImageUrl))
+            {
+                <div class="col-md-4 d-flex align-items-center justify-content-center p-3">
+                    <img src="@plan.ImageUrl" class="img-fluid rounded-start" alt="@plan.Name">
+                </div>
+            }
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h3 class="card-title text-light">@plan.Name</h3>
+                    <p class="card-text text-secondary">@plan.Description</p>
+
+                    <div class="d-flex align-items-baseline mb-3">
+                        <h3 class="card-text text-primary me-2 mb-0">@plan.Price</h3>
+                        <small class="text-secondary">/ @plan.Duration</small>
+                    </div>
+
+                    @if (plan.Details != null && plan.Details.Any())
+                    {
+                        <h5 class="mt-4 text-light">What's Included:</h5>
+                        <ul class="list-unstyled">
+                            @foreach (var detail in plan.Details)
+                            {
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                                         class="bi bi-check-circle-fill text-success me-2" viewBox="0 0 16 16">
+                                        <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z" />
+                                    </svg>
+                                    <span class="text-secondary">@detail.Value</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button class="btn btn-primary" @onclick="Edit">Edit</button>
+                        <button class="btn btn-outline-secondary" @onclick="BackToList">Back to List</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private PlanDto? plan;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPlan();
+    }
+
+    private async Task LoadPlan()
+    {
+        try
+        {
+            plan = await PlanService.GetPlanByIdAsync(Id);
+            if (plan == null)
+            {
+                errorMessage = "Plan not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading plan: {ex.Message}";
+        }
+    }
+
+    private void Edit()
+    {
+        Navigation.NavigateTo($"/plans/edit/{Id}");
+    }
+
+    private void BackToList()
+    {
+        Navigation.NavigateTo("/plans");
+    }
+}
