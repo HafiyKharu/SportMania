@@ -4,7 +4,12 @@ using BlazorApp.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+    .AddInteractiveServerComponents()
+    .AddHubOptions(options =>
+    {
+        options.MaximumReceiveMessageSize = 10 * 1024 * 1024; // 10MB
+    });
+
 
 // Add HttpClient for API communication
 var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5235";

@@ -63,23 +63,29 @@
             </div>
 
             <div class="mb-3">
-                <label for="imageUpload" class="form-label">Upload New Image</label>
-                <InputFile OnChange="HandleFileSelected" class="form-control" id="imageUpload" accept="image/*" />
-                @if (isUploading)
-                {
-                    <div class="mt-2">
-                        <span class="spinner-border spinner-border-sm me-2"></span>
-                        <span class="text-secondary">Uploading...</span>
-                    </div>
-                }
-                @if (!string.IsNullOrEmpty(uploadError))
-                {
-                    <div class="text-danger mt-2 small">@uploadError</div>
-                }
-            </div>
+                <label class="form-label">Image</label>
 
-            <div class="mb-3">
-                <label for="imageUrl" class="form-label">Or Select Existing Image</label>
+                <div class="mb-2">
+                    <label for="imageUpload" class="form-label text-secondary">Upload New Image</label>
+                    <InputFile OnChange="HandleFileSelected" class="form-control" id="imageUpload" accept="image/*" />
+                    @if (isUploading)
+                    {
+                        <div class="mt-2">
+                            <span class="spinner-border spinner-border-sm me-2"></span>
+                            <span class="text-secondary">Uploading...</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrEmpty(uploadError))
+                    {
+                        <div class="text-danger mt-2 small">@uploadError</div>
+                    }
+                    @if (!string.IsNullOrEmpty(uploadSuccess))
+                    {
+                        <div class="text-success mt-2 small">@uploadSuccess</div>
+                    }
+                </div>
+
+                <label for="imageUrl" class="form-label text-secondary">Or select existing image</label>
                 @if (mediaFiles != null && mediaFiles.Count > 0)
                 {
                     <select @bind="plan.ImageUrl" class="form-select" id="imageUrl">
@@ -92,7 +98,7 @@
                 }
                 else
                 {
-                    <div class="text-secondary small">No existing images found in Media folder.</div>
+                    <div class="text-secondary small">No images found. Upload one above first.</div>
                 }
                 
                 @if (!string.IsNullOrEmpty(plan.ImageUrl))
@@ -125,6 +131,7 @@
     private List<string>? mediaFiles;
     private string? errorMessage;
     private string? uploadError;
+    private string? uploadSuccess;
     private bool isSubmitting = false;
     private bool isUploading = false;
 
@@ -147,6 +154,7 @@
 
     private async Task HandleFileSelected(InputFileChangeEventArgs e)
     {
+        uploadSuccess = null;
         uploadError = null;
         isUploading = true;
 
@@ -158,6 +166,7 @@
             if (file.Size > 5 * 1024 * 1024)
             {
                 uploadError = "File size must be less than 5MB.";
+                isUploading = false;
                 return;
             }
 
@@ -166,6 +175,7 @@
             if (!allowedTypes.Contains(file.ContentType.ToLower()))
             {
                 uploadError = "Only image files (JPG, PNG, GIF, WEBP) are allowed.";
+                isUploading = false;
                 return;
             }
 
@@ -176,8 +186,14 @@
             if (imageUrl != null)
             {
                 plan.ImageUrl = imageUrl;
-                // Refresh media list
-                await LoadMediaFiles();
+                uploadSuccess = "Image uploaded successfully!";
+                
+                // Add to media list without full reload
+                mediaFiles ??= new List<string>();
+                if (!mediaFiles.Contains(imageUrl))
+                {
+                    mediaFiles.Add(imageUrl);
+                }
             }
             else
             {
@@ -187,6 +203,7 @@
         catch (Exception ex)
         {
             uploadError = $"Error: {ex.Message}";
+            Console.WriteLine($"Upload error: {ex}");
         }
         finally
         {
