@@ -38,7 +38,7 @@ else
             <p class="card-text text-secondary">@plan.Description</p>
             <div class="d-flex align-items-baseline">
                 <h5 class="text-primary me-2 mb-0">@plan.Price</h5>
-                <small class="text-secondary">/ @plan.Duration</small>
+                <small class="text-secondary">for @plan.Duration days</small>
             </div>
 
             @if (!string.IsNullOrWhiteSpace(plan.ImageUrl))

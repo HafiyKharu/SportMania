@@ -39,12 +39,6 @@ else
                         <!-- Transaction Details -->
                         <div class="bg-dark rounded p-4 my-4 text-start">
                             <h6 class="text-secondary mb-3">Transaction Details</h6>
-                            <div class="row mb-2">
-                                <div class="col-5 text-secondary">Transaction ID:</div>
-                                <div class="col-7 text-white">
-                                    <small>@transaction.TransactionId</small>
-                                </div>
-                            </div>
                             @if (transaction.Plan != null)
                             {
                                 <div class="row mb-2">
@@ -79,9 +73,6 @@ else
                             <button class="btn btn-primary btn-lg" @onclick="GoHome">
                                 Back to Home
                             </button>
-                            <button class="btn btn-outline-secondary" @onclick="ViewTransactions">
-                                View All Transactions
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -115,8 +106,8 @@ else
             }
             else
             {
-                // Set license key if available (you'll need to add this to your DTO)
-                licenseKey = "XXXXXX-XXXXXX-XXXXXX"; // Placeholder - update based on your backend
+                // Get license key from transaction's Key navigation property
+                licenseKey = transaction.Key?.LicenseKey;
             }
         }
         catch (Exception ex)
