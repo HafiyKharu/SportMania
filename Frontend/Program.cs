@@ -14,8 +14,14 @@ builder.Services.AddScoped(sp => new HttpClient
 });
 
 // Add Blazor services
-builder.Services.AddScoped<IPlanService, PlanService>();
+builder.Services.AddScoped<IPlanService>(sp => 
+{
+    var httpClient = sp.GetRequiredService<HttpClient>();
+    var environment = sp.GetRequiredService<IWebHostEnvironment>();
+    return new PlanService(httpClient, environment);
+});
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<IKeyService, KeyService>();
 
 var app = builder.Build();
 

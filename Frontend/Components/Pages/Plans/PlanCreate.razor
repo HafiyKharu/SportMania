@@ -63,7 +63,23 @@
             </div>
 
             <div class="mb-3">
-                <label for="imageUrl" class="form-label">Image</label>
+                <label for="imageUpload" class="form-label">Upload New Image</label>
+                <InputFile OnChange="HandleFileSelected" class="form-control" id="imageUpload" accept="image/*" />
+                @if (isUploading)
+                {
+                    <div class="mt-2">
+                        <span class="spinner-border spinner-border-sm me-2"></span>
+                        <span class="text-secondary">Uploading...</span>
+                    </div>
+                }
+                @if (!string.IsNullOrEmpty(uploadError))
+                {
+                    <div class="text-danger mt-2 small">@uploadError</div>
+                }
+            </div>
+
+            <div class="mb-3">
+                <label for="imageUrl" class="form-label">Or Select Existing Image</label>
                 @if (mediaFiles != null && mediaFiles.Count > 0)
                 {
                     <select @bind="plan.ImageUrl" class="form-select" id="imageUrl">
@@ -73,16 +89,20 @@
                             <option value="@path">@path</option>
                         }
                     </select>
-                    @if (!string.IsNullOrEmpty(plan.ImageUrl))
-                    {
-                        <div class="mt-2">
-                            <img src="@plan.ImageUrl" alt="Preview" style="max-width: 200px;" class="img-thumbnail" />
-                        </div>
-                    }
                 }
                 else
                 {
-                    <div class="text-secondary">Loading media files...</div>
+                    <div class="text-secondary small">No existing images found in Media folder.</div>
+                }
+                
+                @if (!string.IsNullOrEmpty(plan.ImageUrl))
+                {
+                    <div class="mt-3">
+                        <label class="form-label text-secondary">Preview:</label>
+                        <div>
+                            <img src="@plan.ImageUrl" alt="Preview" style="max-width: 200px; max-height: 200px;" class="img-thumbnail bg-dark" />
+                        </div>
+                    </div>
                 }
             </div>
         </div>
@@ -104,9 +124,16 @@
     private PlanDto plan = new() { Details = new List<PlanDetailDto> { new() } };
     private List<string>? mediaFiles;
     private string? errorMessage;
+    private string? uploadError;
     private bool isSubmitting = false;
+    private bool isUploading = false;
 
     protected override async Task OnInitializedAsync()
+    {
+        await LoadMediaFiles();
+    }
+
+    private async Task LoadMediaFiles()
     {
         try
         {
@@ -115,6 +142,55 @@
         catch (Exception ex)
         {
             errorMessage = $"Error loading media files: {ex.Message}";
+        }
+    }
+
+    private async Task HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        uploadError = null;
+        isUploading = true;
+
+        try
+        {
+            var file = e.File;
+            
+            // Validate file size (max 5MB)
+            if (file.Size > 5 * 1024 * 1024)
+            {
+                uploadError = "File size must be less than 5MB.";
+                return;
+            }
+
+            // Validate file type
+            var allowedTypes = new[] { "image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp" };
+            if (!allowedTypes.Contains(file.ContentType.ToLower()))
+            {
+                uploadError = "Only image files (JPG, PNG, GIF, WEBP) are allowed.";
+                return;
+            }
+
+            // Save file
+            using var stream = file.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+            var imageUrl = await PlanService.SaveImageAsync(stream, file.Name);
+
+            if (imageUrl != null)
+            {
+                plan.ImageUrl = imageUrl;
+                // Refresh media list
+                await LoadMediaFiles();
+            }
+            else
+            {
+                uploadError = "Failed to upload image.";
+            }
+        }
+        catch (Exception ex)
+        {
+            uploadError = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isUploading = false;
         }
     }
 
@@ -139,12 +215,25 @@
         try
         {
             plan.PlanId = Guid.NewGuid();
+            
+            // Clear CreatedAt - Backend will set this
+            plan.CreatedAt = null;
+            plan.IsDeleted = false;
+            
+            // Ensure all detail IDs are set properly
+            foreach (var detail in plan.Details)
+            {
+                detail.PlanDetailsId = Guid.NewGuid();
+                detail.PlanId = plan.PlanId;
+            }
+            
             await PlanService.CreatePlanAsync(plan);
             Navigation.NavigateTo("/plans");
         }
         catch (Exception ex)
         {
             errorMessage = $"Error creating plan: {ex.Message}";
+            Console.WriteLine($"Full error: {ex}");
         }
         finally
         {
