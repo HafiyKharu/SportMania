@@ -7,8 +7,11 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 // Add HttpClient for API communication
-var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:5001";
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiBaseUrl) });
+var apiBaseUrl = builder.Configuration["ApiBaseUrl"] ?? "http://localhost:5235";
+builder.Services.AddScoped(sp => new HttpClient
+{
+    BaseAddress = new Uri(apiBaseUrl)
+});
 
 // Add Blazor services
 builder.Services.AddScoped<IPlanService, PlanService>();
