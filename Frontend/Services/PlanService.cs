@@ -15,7 +15,7 @@ public class PlanService : IPlanService
         {
             var response = await _httpClient.GetAsync("api/plans");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsAsync<List<PlanDto>>() ?? new();
+            return await response.Content.ReadFromJsonAsync<List<PlanDto>>() ?? new();
         }
         catch (Exception ex)
         {
@@ -30,7 +30,7 @@ public class PlanService : IPlanService
         {
             var response = await _httpClient.GetAsync($"api/plans/{id}");
             if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadAsAsync<PlanDto>();
+            return await response.Content.ReadFromJsonAsync<PlanDto>();
         }
         catch (Exception ex)
         {
@@ -84,7 +84,7 @@ public class PlanService : IPlanService
         {
             var response = await _httpClient.GetAsync("api/plans/media");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsAsync<List<string>>() ?? new();
+            return await response.Content.ReadFromJsonAsync<List<string>>() ?? new();
         }
         catch (Exception ex)
         {

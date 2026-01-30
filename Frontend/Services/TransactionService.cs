@@ -18,12 +18,12 @@ public class TransactionService : ITransactionService
 
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadAsAsync<dynamic>();
+                var result = await response.Content.ReadFromJsonAsync<dynamic>();
                 return (true, result?.redirectUrl?.ToString(), null);
             }
             else
             {
-                var error = await response.Content.ReadAsAsync<dynamic>();
+                var error = await response.Content.ReadFromJsonAsync<dynamic>();
                 return (false, null, error?.error?.ToString() ?? "Payment initiation failed.");
             }
         }
@@ -39,7 +39,7 @@ public class TransactionService : ITransactionService
         {
             var response = await _httpClient.GetAsync($"api/transactions/{transactionId}");
             if (!response.IsSuccessStatusCode) return null;
-            return await response.Content.ReadAsAsync<TransactionDto>();
+            return await response.Content.ReadFromJsonAsync<TransactionDto>();
         }
         catch (Exception ex)
         {
@@ -54,7 +54,7 @@ public class TransactionService : ITransactionService
         {
             var response = await _httpClient.GetAsync("api/transactions");
             response.EnsureSuccessStatusCode();
-            return await response.Content.ReadAsAsync<List<TransactionDto>>() ?? new();
+            return await response.Content.ReadFromJsonAsync<List<TransactionDto>>() ?? new();
         }
         catch (Exception ex)
         {
