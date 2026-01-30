@@ -1,7 +1,59 @@
 ﻿@page "/"
+@inject IPlanService PlanService
+@using BlazorApp.Services
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Plans</PageTitle>
 
-<h1>Hello, world!</h1>
+<h1>Available Plans</h1>
 
-Welcome to your new app.
+@if (plans == null)
+{
+    <p><em>Loading plans...</em></p>
+}
+else if (plans.Count == 0)
+{
+    <p>No plans available.</p>
+}
+else
+{
+    <div class="plans-container">
+        @foreach (var plan in plans)
+        {
+            <div class="plan-card">
+                @if (!string.IsNullOrEmpty(plan.ImageUrl))
+                {
+                    <img src="@plan.ImageUrl" alt="@plan.Name" class="plan-image" />
+                }
+                <h3>@plan.Name</h3>
+                <p>@plan.Description</p>
+                <p class="price">@plan.Price</p>
+                <p class="duration">Duration: @plan.Duration days</p>
+                @if (plan.Details?.Count > 0)
+                {
+                    <ul>
+                        @foreach (var detail in plan.Details)
+                        {
+                            <li>@detail.Value</li>
+                        }
+                    </ul>
+                }
+                <button class="btn btn-primary" @onclick="() => SelectPlan(plan.PlanId)">Select Plan</button>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    private List<PlanDto>? plans;
+
+    protected override async Task OnInitializedAsync()
+    {
+        plans = await PlanService.GetAllPlansAsync();
+    }
+
+    private void SelectPlan(Guid planId)
+    {
+        Console.WriteLine($"Selected plan: {planId}");
+        // Navigate to payment page or show payment form
+    }
+}
