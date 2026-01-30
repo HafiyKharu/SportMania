@@ -31,9 +31,10 @@ public class TransactionController : ControllerBase
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var baseUrl = Url.Action("PaymentCallback", "Transaction", null, Request.Scheme);
+            // Backend callback URL for processing payment status
+            var callbackUrl = Url.Action("PaymentCallback", "Transaction", null, Request.Scheme);
 
-            if (string.IsNullOrEmpty(baseUrl))
+            if (string.IsNullOrEmpty(callbackUrl))
                 return StatusCode(500, "Could not generate payment callback URL.");
 
             var requestTransaction = new RequestTransaction
@@ -42,7 +43,7 @@ public class TransactionController : ControllerBase
                 PlanId = req.PlanId
             };
 
-            var (isSuccess, result) = await _transactionService.InitiatePaymentAsync(requestTransaction, req.Phone, baseUrl);
+            var (isSuccess, result) = await _transactionService.InitiatePaymentAsync(requestTransaction, req.Phone, callbackUrl);
 
             return isSuccess ? Ok(new { redirectUrl = result }) : BadRequest(new { error = result });
         }
@@ -62,11 +63,12 @@ public class TransactionController : ControllerBase
             if (transaction == null)
                 return NotFound("Transaction not found.");
 
-            return Ok(new
-            {
-                transactionId = transaction.TransactionId,
-                status = transaction.PaymentStatus
-            });
+            // Redirect to Frontend based on payment status
+            var frontendUrl = transaction.PaymentStatus == "Success"
+                ? $"http://localhost:5103/transactions/success/{transaction.TransactionId}"
+                : $"http://localhost:5103/transactions/failed/{transaction.TransactionId}";
+
+            return Redirect(frontendUrl);
         }
         catch (Exception ex)
         {
