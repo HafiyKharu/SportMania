@@ -1,3 +1,5 @@
+using BlazorApp.Dtos;
+
 namespace BlazorApp.Services;
 
 public class TransactionService : ITransactionService

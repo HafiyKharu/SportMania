@@ -1,3 +1,5 @@
+using BlazorApp.Dtos;
+
 namespace BlazorApp.Services;
 
 public class PlanService : IPlanService
@@ -45,7 +47,6 @@ public class PlanService : IPlanService
     {
         try
         {
-            // Don't send CreatedAt or IsDeleted - Backend will handle these
             var payload = new 
             {
                 planId = plan.PlanId,

@@ -1,6 +1,6 @@
-namespace BlazorApp.Services;
-
 using System.Text.Json.Serialization;
+
+namespace BlazorApp.Dtos;
 
 public class PaymentResponseDto
 {
