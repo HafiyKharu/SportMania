@@ -66,6 +66,34 @@ public class PlanController : ControllerBase
         return Ok(GetMediaPaths());
     }
 
+    [HttpPost("media")]
+    public async Task<IActionResult> UploadMedia(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest(new { error = "No file provided." });
+
+        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        if (!ImageExtensions.Contains(extension))
+            return BadRequest(new { error = "Invalid file type." });
+
+        if (file.Length > 5 * 1024 * 1024)
+            return BadRequest(new { error = "File too large. Maximum size is 5MB." });
+
+        var mediaDir = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "Media");
+        if (!Directory.Exists(mediaDir))
+            Directory.CreateDirectory(mediaDir);
+
+        var newFileName = $"{Guid.NewGuid()}{extension}";
+        var filePath = Path.Combine(mediaDir, newFileName);
+
+        using (var stream = new FileStream(filePath, FileMode.Create))
+        {
+            await file.CopyToAsync(stream);
+        }
+
+        return Ok(new { path = $"/Media/{newFileName}" });
+    }
+
     private static readonly string[] ImageExtensions = new[] { ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg" };
 
     private List<string> GetMediaPaths()

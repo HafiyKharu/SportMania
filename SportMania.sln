@@ -4,8 +4,6 @@ VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SportMania.Backend", "Backend\SportMania.csproj", "{E2D7D16A-5D7E-4F31-A2E7-4634F49A5F2E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SportMania.Frontend", "Frontend\BlazorApp.csproj", "{B1F9F23E-5F88-4D0E-B3B4-0C43E8FDC20B}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -16,10 +14,6 @@ Global
 			{E2D7D16A-5D7E-4F31-A2E7-4634F49A5F2E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 			{E2D7D16A-5D7E-4F31-A2E7-4634F49A5F2E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 			{E2D7D16A-5D7E-4F31-A2E7-4634F49A5F2E}.Release|Any CPU.Build.0 = Release|Any CPU
-			{B1F9F23E-5F88-4D0E-B3B4-0C43E8FDC20B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-			{B1F9F23E-5F88-4D0E-B3B4-0C43E8FDC20B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-			{B1F9F23E-5F88-4D0E-B3B4-0C43E8FDC20B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-			{B1F9F23E-5F88-4D0E-B3B4-0C43E8FDC20B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
