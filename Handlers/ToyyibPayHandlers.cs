@@ -81,7 +81,7 @@ namespace SportMania.Handlers
             Plan plan,
             Key key)
         {
-            var emailContent = $"Thank you for purchasing {plan.Name}! Your redemption key: {key.Code}";
+            var emailContent = $"Thank you for purchasing {plan.Name}! Your redemption key: {key.LicenseKey}";
 
             if (string.IsNullOrWhiteSpace(categoryCode)){throw new ArgumentException("ToyyibPay category code must be provided and cannot be empty.", nameof(categoryCode));}
             var userSecretKey = _configuration["ToyyibPay:UserSecretKey"];

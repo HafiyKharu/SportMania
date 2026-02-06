@@ -8,5 +8,13 @@ namespace SportMania.Repository.Interface
     {
         Task<Key> CreateAsync(Key key);
         Task<Key?> GetByIdAsync(Guid id);
+        Task<Key?> GetByLicenseKeyAsync(string licenseKey);
+        Task<Key?> GetByLicenseKeyAndGuildAsync(string licenseKey, ulong guildId);
+        Task<IEnumerable<Key>> GetByGuildIdAsync(ulong guildId);
+        Task<IEnumerable<Key>> GetActiveKeysByGuildIdAsync(ulong guildId);
+        Task<Key?> GetByUserIdAndGuildAsync(ulong userId, ulong guildId);
+        Task UpdateAsync(Key key);
+        Task DeleteAsync(Guid id);
+        Task DeleteExpiredKeysAsync();
     }
 }

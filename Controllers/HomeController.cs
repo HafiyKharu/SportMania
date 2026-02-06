@@ -27,7 +27,6 @@ public class HomeController : Controller
         return View();
     }
 
-    // Keep Plan page if you still need it
     public IActionResult Plan() => RedirectToAction(nameof(Index));
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

@@ -4,5 +4,5 @@ namespace SportMania.Services.Interface;
 
 public interface IKeyService
 {
-    Task<Key> GenerateKeyAsync();
+    Task<Key> GenerateKeyAsync(ulong guildId, Guid planId, int durationDays);
 }

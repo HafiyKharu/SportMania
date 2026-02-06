@@ -1,41 +1,76 @@
 using SportMania.Models;
 using SportMania.Repository.Interface;
 using SportMania.Services.Interface;
-using System.Text;
+using System.Security.Cryptography;
+using Microsoft.Extensions.Logging;
 
 namespace SportMania.Services;
 
 public class KeyService : IKeyService
 {
     private readonly IKeyRepository _keyRepository;
-    private const int KeyLength = 16;
-    private const string Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    
-    public KeyService(IKeyRepository keyRepository)
+    private readonly IDiscordGuildRepository _guildRepository;
+    private readonly ILogger<KeyService> _logger;
+
+    public KeyService(IKeyRepository keyRepository, IDiscordGuildRepository guildRepository, ILogger<KeyService> logger)
     {
         _keyRepository = keyRepository;
+        _guildRepository = guildRepository;
+        _logger = logger;
     }
     
-    public async Task<Key> GenerateKeyAsync()
+    public async Task<Key> GenerateKeyAsync(ulong guildId, Guid planId, int durationDays)
     {
+        var guild = await _guildRepository.GetByIdAsync(guildId);
+        if (guild == null)
+        {
+            guild = new DiscordGuild { GuildId = guildId };
+            await _guildRepository.CreateAsync(guild);
+        }
+
+        string licenseKey;
+        int maxRetries = 10;
+        int retryCount = 0;
+        do
+        {
+            licenseKey = GenerateLicenseKey();
+            retryCount++;
+            if (retryCount > maxRetries)
+            {
+                _logger.LogError("Failed to generate a unique license key after {MaxRetries} attempts.", maxRetries);
+                throw new InvalidOperationException("Could not generate a unique license key.");
+            }
+        } while (await _keyRepository.GetByLicenseKeyAsync(licenseKey) != null);
+
         var newKey = new Key
         {
             KeyId = Guid.NewGuid(),
-            Code = GenerateUniqueCode(),
-            IsRedeemed = false
+            LicenseKey = licenseKey,
+            GuildId = guildId,
+            PlanId = planId,
+            DurationDays = durationDays,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow
         };
-        
+
         return await _keyRepository.CreateAsync(newKey);
     }
 
-    private static string GenerateUniqueCode()
+    private static string GenerateLicenseKey()
     {
-        var random = new Random();
-        var randomString = new StringBuilder(KeyLength);
-        for (int i = 0; i < KeyLength; i++)
+        const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        var segments = new string[4];
+        
+        for (int i = 0; i < 4; i++)
         {
-            randomString.Append(Chars[random.Next(Chars.Length)]);
+            var segment = new char[5];
+            for (int j = 0; j < 5; j++)
+            {
+                segment[j] = chars[RandomNumberGenerator.GetInt32(chars.Length)];
+            }
+            segments[i] = new string(segment);
         }
-        return randomString.ToString();
+        
+        return string.Join("-", segments);
     }
 }
