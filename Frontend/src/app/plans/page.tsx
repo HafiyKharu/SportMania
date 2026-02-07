@@ -33,7 +33,7 @@ export default function PlansPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto animate-slide-up">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-sm-text-light">Available Plans</h1>
         <button

@@ -36,7 +36,7 @@ export default function TransactionsPage() {
   if (loading) return <LoadingSpinner />;
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto animate-slide-up">
       <h1 className="text-3xl font-bold text-sm-text-light mb-6">Transaction History</h1>
 
       {errorMessage && (
