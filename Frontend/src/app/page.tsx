@@ -79,19 +79,22 @@ export default function HomePage() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Hero Section */}
-      <section className="text-center py-16 px-4">
-        <h1 className="text-5xl font-bold mb-4">
+      <section className="text-center py-16 px-4 animate-fade-in">
+        <h1 className="text-5xl font-bold mb-4 animate-slide-up">
           <span className="text-gradient">Stream Your Favorite Content</span>
         </h1>
-        <p className="text-sm-muted text-lg max-w-2xl mx-auto">
+        <p className="text-sm-muted text-lg max-w-2xl mx-auto animate-slide-up animation-delay-100">
           Choose the perfect plan for your streaming needs. Access premium content with our flexible subscription options.
         </p>
       </section>
 
       {/* Error */}
       {errorMessage && (
-        <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded mb-6">
-          {errorMessage}
+        <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded mb-6 animate-slide-up shadow-lg shadow-red-500/10">
+          <div className="flex items-center gap-2">
+            <span>⚠️</span>
+            {errorMessage}
+          </div>
         </div>
       )}
 
@@ -101,10 +104,11 @@ export default function HomePage() {
           Choose Your Plan
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          {plans.map((plan) => (
+          {plans.map((plan, index) => (
             <div
               key={plan.planId}
-              className={`relative flex flex-col bg-sm-card border rounded-lg overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_10px_30px_rgba(13,110,253,0.3)] ${
+              style={{ animationDelay: `${index * 150}ms` }}
+              className={`animate-slide-up opacity-0 relative flex flex-col bg-sm-card border rounded-lg overflow-hidden transition-all duration-300 hover:scale-[1.03] hover:shadow-[0_10px_30px_rgba(13,110,253,0.3)] ${
                 isPopular(plan) ? 'border-sm-primary' : 'border-sm-border'
               }`}
             >
@@ -162,8 +166,8 @@ export default function HomePage() {
 
       {/* Subscription Modal */}
       {showModal && selectedPlan && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={closeModal}>
-          <div className="bg-sm-card border border-sm-border rounded-lg p-6 w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={closeModal}>
+          <div className="bg-sm-card border border-sm-border rounded-lg p-6 w-full max-w-md mx-4 animate-scale-in shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold text-sm-text-light">
                 Subscribe to {selectedPlan.name}
@@ -179,7 +183,7 @@ export default function HomePage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary"
+                  className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary focus:ring-1 focus:ring-sm-primary transition-all duration-200"
                   placeholder="your@email.com"
                 />
               </div>
@@ -191,14 +195,14 @@ export default function HomePage() {
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary"
+                  className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary focus:ring-1 focus:ring-sm-primary transition-all duration-200"
                   placeholder="+60123456789"
                 />
               </div>
 
               {submissionError && (
-                <div className="bg-red-500/10 border border-red-500 text-red-400 px-3 py-2 rounded mb-4 text-sm">
-                  {submissionError}
+                <div className="bg-red-500/10 border border-red-500 text-red-400 px-3 py-2 rounded mb-4 text-sm animate-fade-in flex items-center gap-2">
+                  <span>⚠️</span> {submissionError}
                 </div>
               )}
 
