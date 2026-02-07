@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/api';
+import { getAuthToken } from '@/lib/auth';
 import type { PlanDto } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5235';
@@ -53,8 +54,10 @@ export const planService = {
     const formData = new FormData();
     formData.append('file', file);
     try {
+      const token = getAuthToken();
       const response = await fetch(`${API_BASE_URL}/api/plans/media`, {
         method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         body: formData,
       });
       if (!response.ok) throw new Error('Upload failed');

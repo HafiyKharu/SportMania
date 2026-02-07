@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SportMania.Models.Requests;
 using SportMania.Repository.Interface;
@@ -24,6 +25,7 @@ public class TransactionController : ControllerBase
     }
 
     [HttpPost("initiate-payment")]
+    [AllowAnonymous]
     public async Task<IActionResult> InitiatePayment([FromBody] RequestInitiatePayment req)
     {
         try
@@ -54,6 +56,7 @@ public class TransactionController : ControllerBase
     }
 
     [HttpGet("payment-callback")]
+    [AllowAnonymous]
     public async Task<IActionResult> PaymentCallback(Guid transactionId, string status_id)
     {
         try
@@ -77,6 +80,7 @@ public class TransactionController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetAll()
     {
         try
@@ -91,6 +95,7 @@ public class TransactionController : ControllerBase
     }
 
     [HttpGet("{transactionId:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GetById(Guid transactionId)
     {
         try

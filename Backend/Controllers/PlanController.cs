@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SportMania.Models;
 using SportMania.Repository.Interface;
@@ -35,6 +36,7 @@ public class PlanController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<Plan>> Create([FromBody] Plan plan)
     {
         await _planRepository.AddAsync(plan);
@@ -42,6 +44,7 @@ public class PlanController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] Plan plan)
     {
         if (id != plan.PlanId)
@@ -54,6 +57,7 @@ public class PlanController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _planRepository.DeleteAsync(id);
@@ -61,12 +65,14 @@ public class PlanController : ControllerBase
     }
 
     [HttpGet("media")]
+    [Authorize(Roles = "Admin")]
     public ActionResult<IEnumerable<string>> GetMedia()
     {
         return Ok(GetMediaPaths());
     }
 
     [HttpPost("media")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UploadMedia(IFormFile file)
     {
         if (file == null || file.Length == 0)

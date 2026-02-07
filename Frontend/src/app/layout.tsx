@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Navbar } from '@/components/Navbar';
+import { AuthGate } from '@/components/AuthGate';
 
 export const metadata: Metadata = {
   title: 'SportMania',
@@ -15,10 +16,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-sm-bg text-sm-text min-h-screen">
-        <Navbar />
-        <main className="px-4 py-4">
-          {children}
-        </main>
+        <AuthGate>
+          <Navbar />
+          <main className="px-4 py-4">
+            {children}
+          </main>
+        </AuthGate>
       </body>
     </html>
   );
