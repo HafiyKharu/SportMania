@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { transactionService } from '@/services/transactionService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -10,6 +11,7 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionDto[]>([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     loadTransactions();
@@ -55,12 +57,13 @@ export default function TransactionsPage() {
               <th className="text-left px-4 py-3 text-sm-muted font-medium">Bill Code</th>
               <th className="text-left px-4 py-3 text-sm-muted font-medium">Guild ID</th>
               <th className="text-left px-4 py-3 text-sm-muted font-medium">Date</th>
+              <th className="text-left px-4 py-3 text-sm-muted font-medium">Action</th>
             </tr>
           </thead>
           <tbody>
             {transactions.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center py-8 text-sm-muted">
+                <td colSpan={9} className="text-center py-8 text-sm-muted">
                   No transactions found.
                 </td>
               </tr>
@@ -90,6 +93,14 @@ export default function TransactionsPage() {
                   </td>
                   <td className="px-4 py-3 text-sm-text">
                     {formatDate(tx.createdAt)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      onClick={() => router.push(`/transactions/details/${tx.transactionId}`)}
+                      className="text-sm-accent hover:underline text-sm"
+                    >
+                      View
+                    </button>
                   </td>
                 </tr>
               ))

@@ -20,17 +20,17 @@ export interface TransactionDto {
   transactionId: string;
   customerId: string;
   planId: string;
-  keyId: string | null;
+  keyId: string;
   guildId: number;
   amount: string;
   paymentStatus: string;
-  billCode: string | null;
+  billCode?: string;
+  customer?: CustomerDto;
+  plan?: PlanDto;
+  key?: KeyDto;
   createdAt: string;
-  updatedAt: string | null;
+  updatedAt: string;
   isDeleted: boolean;
-  customer: CustomerDto | null;
-  plan: PlanDto | null;
-  key: KeyDto | null;
 }
 
 export interface CustomerDto {
@@ -44,9 +44,9 @@ export interface KeyDto {
   licenseKey: string;
   guildId: number;
   planId: string;
-  redeemedByUserId: number | null;
-  redeemedAt: string | null;
-  expiresAt: string | null;
+  redeemedByUserId?: number;
+  redeemedAt?: string;
+  expiresAt?: string;
   durationDays: number;
   isActive: boolean;
   createdAt: string;
