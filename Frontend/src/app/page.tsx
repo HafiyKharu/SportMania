@@ -79,11 +79,11 @@ export default function HomePage() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Hero Section */}
-      <section className="text-center py-16 px-4 animate-fade-in">
-        <h1 className="text-5xl font-bold mb-4 animate-slide-up">
+      <section className="text-center py-16 px-4 animate-slide-up">
+        <h1 className="text-5xl font-bold mb-4 ">
           <span className="text-gradient">Stream Your Favorite Content</span>
         </h1>
-        <p className="text-sm-muted text-lg max-w-2xl mx-auto animate-slide-up animation-delay-100">
+        <p className="text-sm-muted text-lg max-w-2xl mx-auto animation-delay-100">
           Choose the perfect plan for your streaming needs. Access premium content with our flexible subscription options.
         </p>
       </section>
@@ -100,7 +100,7 @@ export default function HomePage() {
 
       {/* Pricing Cards */}
       <section className="pb-16 px-4">
-        <h2 className="text-3xl font-bold text-center text-sm-text-light mb-8">
+        <h2 className="text-3xl font-bold text-center text-sm-text-light mb-8 animate-fade-in">
           Choose Your Plan
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
