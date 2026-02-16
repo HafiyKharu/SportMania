@@ -95,8 +95,6 @@ export default function PlanCreatePage() {
             planId,
             value: d.value,
           })),
-        createdAt: null,
-        isDeleted: false,
       };
 
       await planService.createPlan(plan);

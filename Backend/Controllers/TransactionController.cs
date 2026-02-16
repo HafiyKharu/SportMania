@@ -42,7 +42,8 @@ public class TransactionController : ControllerBase
             var requestTransaction = new RequestTransaction
             {
                 Email = req.Email,
-                PlanId = req.PlanId
+                PlanId = req.PlanId,
+                PhoneNumber = req.PhoneNumber
             };
 
             var (isSuccess, result) = await _transactionService.InitiatePaymentAsync(requestTransaction, callbackUrl);

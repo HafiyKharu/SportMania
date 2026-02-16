@@ -7,13 +7,13 @@ export const transactionService = {
   async initiatePayment(
     email: string,
     planId: string,
-    phone: string
+    phoneNumber: string
   ): Promise<{ isSuccess: boolean; redirectUrl?: string; error?: string }> {
     try {
       const response = await fetch(`${API_BASE_URL}/api/transactions/initiate-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, planId, phone }),
+        body: JSON.stringify({ email, planId, phoneNumber }),
       });
 
       if (response.ok) {

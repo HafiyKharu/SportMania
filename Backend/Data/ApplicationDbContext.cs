@@ -11,7 +11,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Plan> Plans { get; set; }
     public DbSet<PlanDetails> PlanDetails { get; set; }
     public DbSet<Key> Keys { get; set; }
-    public DbSet<DiscordGuild> DiscordGuilds { get; set; }
+    public DbSet<PlanRoleMapping> PlanRoleMappings { get; set; }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
@@ -77,17 +77,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasForeignKey(t => t.KeyId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        builder.Entity<DiscordGuild>(entity =>
-        {
-            entity.HasKey(e => e.GuildId);
-
-            entity.Property(e => e.GuildId)
-                .ValueGeneratedNever();
-
-            entity.Property(e => e.Prefix)
-                .HasDefaultValue("!");
-        });
-
         builder.Entity<Customer>(entity =>
         {
             entity.HasKey(e => e.CustomerId);
@@ -99,11 +88,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         {
             entity.HasKey(e => e.KeyId);
             entity.HasIndex(e => e.LicenseKey).IsUnique();
-
-            entity.HasOne(e => e.Guild)
-                  .WithMany()
-                  .HasForeignKey(e => e.GuildId)
-                  .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => e.GuildId);
 
             entity.HasOne(e => e.Plan)
                   .WithMany()
@@ -126,10 +111,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         {
             entity.HasKey(e => e.MappingId);
             entity.HasIndex(e => new { e.GuildId, e.PlanId }).IsUnique();
-            entity.HasOne(e => e.Guild)
-                  .WithMany(g => g.RoleMappings)
-                  .HasForeignKey(e => e.GuildId)
-                  .OnDelete(DeleteBehavior.Cascade);
+
             entity.HasOne(e => e.Plan)
                   .WithMany()
                   .HasForeignKey(e => e.PlanId)

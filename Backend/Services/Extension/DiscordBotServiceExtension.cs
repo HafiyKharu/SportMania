@@ -125,7 +125,6 @@ namespace SportMania.Services.Extension
             if (!int.TryParse(_configuration["DefaultKeyDurationDays"], out int DefaultKeyDurationDays)) _logger.LogWarning("Config the default Key Duration Days in appsetting."); 
             using var scope = _serviceProvider.CreateScope();
             var keyService = scope.ServiceProvider.GetRequiredService<IKeyService>();
-            var guildRepo = scope.ServiceProvider.GetRequiredService<IDiscordGuildRepository>();
             var planRepo = scope.ServiceProvider.GetRequiredService<IPlanRepository>();
 
             if (!await HasAdminPermissionAsync(command))
@@ -164,7 +163,7 @@ namespace SportMania.Services.Extension
                 .Build();
 
             await command.RespondAsync(embed: embed, ephemeral: true);
-            await LogToChannelAsync(command.GuildId!.Value, guildRepo, $"🔑 {command.User} generated {plan.Name} key");
+            await LogToChannelAsync($"🔑 {command.User} generated {plan.Name} key");
         }
 
         public async Task HandleRedeemAsync(SocketSlashCommand command)
@@ -177,7 +176,6 @@ namespace SportMania.Services.Extension
 
             using var scope = _serviceProvider.CreateScope();
             var keyRepo = scope.ServiceProvider.GetRequiredService<IKeyRepository>();
-            var guildRepo = scope.ServiceProvider.GetRequiredService<IDiscordGuildRepository>();
             var mappingRepo = scope.ServiceProvider.GetRequiredService<IPlanRoleMappingRepository>();
 
             var licenseKey = command.Data.Options.First(o => o.Name == "key").Value.ToString()!;
@@ -254,7 +252,7 @@ namespace SportMania.Services.Extension
                 .Build();
 
             await command.RespondAsync(embed: embed, ephemeral: true);
-            await LogToChannelAsync(guildId, guildRepo, $"✅ {command.User.Mention} activated {key.Plan?.Name} (expires: {key.ExpiresAt:yyyy-MM-dd})");
+            await LogToChannelAsync( $"✅ {command.User.Mention} activated {key.Plan?.Name} (expires: {key.ExpiresAt:yyyy-MM-dd})");
         }
 
         private Task<bool> HasAdminPermissionAsync(SocketSlashCommand command)
@@ -267,13 +265,10 @@ namespace SportMania.Services.Extension
             return Task.FromResult(user.GuildPermissions.Administrator || user.GuildPermissions.ManageGuild);
         }
 
-        private async Task LogToChannelAsync(ulong guildId, IDiscordGuildRepository guildRepo, string message)
+        private async Task LogToChannelAsync(string message)
         {
-            var guild = await guildRepo.GetByIdAsync(guildId);
-            if (guild?.LogChannelId == null) return;
-
-            var channel = _client.GetChannel(guild.LogChannelId.Value) as ITextChannel;
-            if (channel != null)
+            var guildIdString = _configuration["Discord:DefaultGuildId"] ?? throw new Exception("Default Guild ID not configured. Please set 'Discord:DefaultGuildId' in appsetting.");
+            if (_client.GetChannel(ulong.Parse(guildIdString)) is ITextChannel channel)
             {
                 await channel.SendMessageAsync(message);
             }

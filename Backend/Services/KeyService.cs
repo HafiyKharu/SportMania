@@ -7,18 +7,10 @@ namespace SportMania.Services;
 
 public class KeyService(
         IKeyRepository _keyRepository,
-        IDiscordGuildRepository _guildRepository,
         ILogger<KeyService> _logger) : IKeyService
 {
     public async Task<Key> GenerateKeyAsync(ulong guildId, Guid planId, int durationDays)
     {
-        var guild = await _guildRepository.GetByIdAsync(guildId);
-        if (guild == null)
-        {
-            guild = new DiscordGuild { GuildId = guildId };
-            await _guildRepository.CreateAsync(guild);
-        }
-
         string licenseKey;
         int maxRetries = 10;
         int retryCount = 0;

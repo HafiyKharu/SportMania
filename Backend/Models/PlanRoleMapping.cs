@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace SportMania.Models;
 
 public class PlanRoleMapping
@@ -6,8 +8,10 @@ public class PlanRoleMapping
     public ulong GuildId { get; set; }
     public Guid PlanId { get; set; }
     public ulong RoleId { get; set; }
+    
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
     public DateTime CreatedAt { get; set; }
     
-    public DiscordGuild? Guild { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public Plan? Plan { get; set; }
 }

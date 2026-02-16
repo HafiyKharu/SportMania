@@ -15,7 +15,7 @@ export default function HomePage() {
   const [selectedPlan, setSelectedPlan] = useState<PlanDto | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phoneNumber, setPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState('');
 
@@ -52,13 +52,13 @@ export default function HomePage() {
 
   async function handleSubscription(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedPlan || !email || !phone) return;
+    if (!selectedPlan || !email || !phoneNumber) return;
 
     setIsSubmitting(true);
     setSubmissionError('');
 
     try {
-      const result = await transactionService.initiatePayment(email, selectedPlan.planId, phone);
+      const result = await transactionService.initiatePayment(email, selectedPlan.planId, phoneNumber);
       if (result.isSuccess && result.redirectUrl) {
         window.open(result.redirectUrl, '_blank');
         closeModal();
@@ -193,7 +193,7 @@ export default function HomePage() {
                 <input
                   type="tel"
                   required
-                  value={phone}
+                  value={phoneNumber}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary focus:ring-1 focus:ring-sm-primary transition-all duration-200"
                   placeholder="+60123456789"

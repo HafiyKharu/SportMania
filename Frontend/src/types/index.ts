@@ -6,8 +6,6 @@ export interface PlanDto {
   price: string;
   duration: string;
   details: PlanDetailDto[];
-  createdAt: string | null;
-  isDeleted: boolean;
 }
 
 export interface PlanDetailDto {

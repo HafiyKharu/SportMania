@@ -69,7 +69,6 @@ builder.Services.AddScoped<ICustomerRepository, CustomerRepository>();
 builder.Services.AddScoped<IPlanRepository, PlanRepository>();
 builder.Services.AddScoped<IPlanDetailsRepository, PlanDetailsRepository>();
 builder.Services.AddScoped<IKeyRepository, KeyRepository>();
-builder.Services.AddScoped<IDiscordGuildRepository, DiscordGuildRepository>();
 builder.Services.AddScoped<IPlanRoleMappingRepository, PlanRoleMappingRepository>();
 
 // Add services
