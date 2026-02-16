@@ -88,6 +88,13 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .HasDefaultValue("!");
         });
 
+        builder.Entity<Customer>(entity =>
+        {
+            entity.HasKey(e => e.CustomerId);
+            entity.HasIndex(e => e.Email);
+            entity.HasIndex(e => e.PhoneNumber);
+        });
+
         builder.Entity<Key>(entity =>
         {
             entity.HasKey(e => e.KeyId);

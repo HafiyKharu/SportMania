@@ -1,37 +1,25 @@
 using Discord;
 using Discord.WebSocket;
+using SportMania.Services.Extension;
 using SportMania.Services.Interface;
-using SportMania.Handlers.Interface;
 
 namespace SportMania.Services;
 
-public class DiscordBotService : IDiscordBotService, IHostedService
+public class DiscordBotService(
+        DiscordSocketClient _client,
+        IConfiguration _configuration,
+        IServiceProvider _serviceProvider,
+        ILogger<DiscordBotService> _logger) : IDiscordBotService, IHostedService
 {
-    private readonly DiscordSocketClient _client;
-    private readonly IConfiguration _configuration;
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<DiscordBotService> _logger;
-
-    public DiscordBotService(
-        DiscordSocketClient client,
-        IConfiguration configuration,
-        IServiceProvider serviceProvider,
-        ILogger<DiscordBotService> logger)
-    {
-        _client = client;
-        _configuration = configuration;
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-
-        _client.Log += LogAsync;
-        _client.Ready += ReadyAsync;
-        _client.SlashCommandExecuted += SlashCommandExecutedAsync;
-    }
-
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
         var token = _configuration["Discord:BotToken"]
             ?? throw new InvalidOperationException("Discord bot token not configured.");
+
+        // Attach event handlers
+        _client.Log += LogAsync;
+        _client.Ready += ReadyAsync;
+        _client.SlashCommandExecuted += SlashCommandExecutedAsync;
 
         await _client.LoginAsync(TokenType.Bot, token);
         await _client.StartAsync();
@@ -39,11 +27,24 @@ public class DiscordBotService : IDiscordBotService, IHostedService
 
     public async Task StopAsync(CancellationToken cancellationToken = default)
     {
-        await _client.StopAsync();
-    }
+        try
+        {
+            // Detach event handlers
+            _client.Log -= LogAsync;
+            _client.Ready -= ReadyAsync;
+            _client.SlashCommandExecuted -= SlashCommandExecutedAsync;
 
-    Task IDiscordBotService.StartAsync() => StartAsync();
-    Task IDiscordBotService.StopAsync() => StopAsync();
+            await _client.StopAsync();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Expected during shutdown if client is already disposed
+        }
+        catch (OperationCanceledException)
+        {
+            // Expected if cancellation token is triggered
+        }
+    }
 
     private Task LogAsync(LogMessage log)
     {
@@ -107,7 +108,7 @@ public class DiscordBotService : IDiscordBotService, IHostedService
         {
             // Create a scope to get scoped services
             using var scope = _serviceProvider.CreateScope();
-            var handler = scope.ServiceProvider.GetRequiredService<IDiscordBotHandlers>();
+            var handler = scope.ServiceProvider.GetRequiredService<DiscordCommandExecution>();
 
             await (command.CommandName switch
             {

@@ -7,8 +7,6 @@ using SportMania.Repository.Interface;
 using SportMania.Repository;
 using SportMania.Services.Interface;
 using SportMania.Services;
-using SportMania.Handlers.Interface;
-using SportMania.Handlers;
 using Discord;
 using Discord.WebSocket;
 
@@ -74,13 +72,10 @@ builder.Services.AddScoped<IKeyRepository, KeyRepository>();
 builder.Services.AddScoped<IDiscordGuildRepository, DiscordGuildRepository>();
 builder.Services.AddScoped<IPlanRoleMappingRepository, PlanRoleMappingRepository>();
 
-// Add handlers
-builder.Services.AddScoped<IToyyibPayHandler, ToyyibPayHandler>();
-builder.Services.AddScoped<IDiscordBotHandlers, DiscordCommandHandler>();
-
 // Add services
 builder.Services.AddScoped<IKeyService, KeyService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<IToyyibPayService, ToyyibPayService>();
 
 // Conditionally register Discord bot services
 if (builder.Configuration.GetValue<bool>("DiscordBot:Enabled"))

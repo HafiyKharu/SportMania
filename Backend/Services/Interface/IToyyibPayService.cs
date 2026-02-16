@@ -1,9 +1,9 @@
-using SportMania.Models;
 using SportMania.Models.Requests;
+using SportMania.Models;
 
-namespace SportMania.Handlers.Interface
+namespace SportMania.Services.Interface
 {
-    public interface IToyyibPayHandler
+    public interface IToyyibPayService
     {
         Task<(bool IsSuccess, string Result)> CreateBillAsync(RequestToyyibPay request);
         string GetCategoryCode(string planName);

@@ -45,7 +45,7 @@ public class TransactionController : ControllerBase
                 PlanId = req.PlanId
             };
 
-            var (isSuccess, result) = await _transactionService.InitiatePaymentAsync(requestTransaction, req.Phone, callbackUrl);
+            var (isSuccess, result) = await _transactionService.InitiatePaymentAsync(requestTransaction, callbackUrl);
 
             return isSuccess ? Ok(new { redirectUrl = result }) : BadRequest(new { error = result });
         }

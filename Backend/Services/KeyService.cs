@@ -2,23 +2,14 @@ using SportMania.Models;
 using SportMania.Repository.Interface;
 using SportMania.Services.Interface;
 using System.Security.Cryptography;
-using Microsoft.Extensions.Logging;
 
 namespace SportMania.Services;
 
-public class KeyService : IKeyService
+public class KeyService(
+        IKeyRepository _keyRepository,
+        IDiscordGuildRepository _guildRepository,
+        ILogger<KeyService> _logger) : IKeyService
 {
-    private readonly IKeyRepository _keyRepository;
-    private readonly IDiscordGuildRepository _guildRepository;
-    private readonly ILogger<KeyService> _logger;
-
-    public KeyService(IKeyRepository keyRepository, IDiscordGuildRepository guildRepository, ILogger<KeyService> logger)
-    {
-        _keyRepository = keyRepository;
-        _guildRepository = guildRepository;
-        _logger = logger;
-    }
-    
     public async Task<Key> GenerateKeyAsync(ulong guildId, Guid planId, int durationDays)
     {
         var guild = await _guildRepository.GetByIdAsync(guildId);
@@ -60,7 +51,7 @@ public class KeyService : IKeyService
     {
         const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         var segments = new string[4];
-        
+
         for (int i = 0; i < 4; i++)
         {
             var segment = new char[5];
@@ -70,7 +61,7 @@ public class KeyService : IKeyService
             }
             segments[i] = new string(segment);
         }
-        
+
         return string.Join("-", segments);
     }
 }
