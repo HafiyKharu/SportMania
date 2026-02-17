@@ -22,3 +22,29 @@ export async function login(username: string, password: string): Promise<LoginRe
 
   return response.json();
 }
+
+export const authService = {
+  getToken(): string | null {
+    return localStorage.getItem('token');
+  },
+
+  setToken(token: string): void {
+    localStorage.setItem('token', token);
+  },
+
+  removeToken(): void {
+    localStorage.removeItem('token');
+  },
+
+  isAuthenticated(): boolean {
+    return !!this.getToken();
+  },
+
+  getAuthHeaders(): HeadersInit {
+    const token = this.getToken();
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+    };
+  },
+};

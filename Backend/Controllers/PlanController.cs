@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SportMania.Models;
 using SportMania.Repository.Interface;
+using SportMania.Services;
 
 namespace SportMania.Controllers;
 
@@ -10,17 +11,21 @@ namespace SportMania.Controllers;
 public class PlanController : ControllerBase
 {
     private readonly IPlanRepository _planRepository;
+    private readonly PlanActivationService _planActivationService;
 
-    public PlanController(IPlanRepository planRepository)
+    public PlanController(IPlanRepository planRepository, PlanActivationService planActivationService)
     {
         _planRepository = planRepository;
+        _planActivationService = planActivationService;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Plan>>> GetAll()
     {
         var plans = await _planRepository.GetAllAsync();
-        return Ok(plans);
+        // Return only activated plans for regular users
+        var activePlans = plans.Where(p => p.IsActivated).ToList();
+        return Ok(activePlans);
     }
 
     [HttpGet("{id:guid}")]
@@ -62,6 +67,15 @@ public class PlanController : ControllerBase
     {
         await _planRepository.DeleteAsync(id);
         return NoContent();
+    }
+
+    [HttpPost("refresh-activation")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> RefreshActivation()
+    {
+        await _planActivationService.RefreshPlanActivationAsync();
+        var plans = await _planRepository.GetAllAsync();
+        return Ok(new { message = "Plan activation status refreshed.", plans });
     }
 
     [HttpGet("media")]

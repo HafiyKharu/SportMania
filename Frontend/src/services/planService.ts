@@ -68,4 +68,10 @@ export const planService = {
       return null;
     }
   },
+
+  async refreshActivation(): Promise<void> {
+    await apiFetch('api/plans/refresh-activation', {
+      method: 'POST',
+    });
+  },
 };

@@ -12,7 +12,7 @@ public class ToyyibPayService(IConfiguration _configuration, IHttpClientFactory 
         try
         {
             string BASE_URL = _configuration["ToyyibPayURL"] ?? throw new ArgumentException("ToyyibPay Base URL must be provided and cannot be empty, Check Appsetting.");
-            string CREATE_BILL_ENDPOINT = _configuration["BillEndPoint"] ?? throw new ArgumentException("ToyyibPay Base URL must be provided and cannot be empty, Check Appsetting.");
+            string CREATE_BILL_ENDPOINT = _configuration["BillEndPoint"] ?? throw new ArgumentException("ToyyibPay Bill Endpoint must be provided and cannot be empty, Check Appsetting.");
             var client = _httpClientFactory.CreateClient();
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, $"{BASE_URL}{CREATE_BILL_ENDPOINT}")
             {
@@ -43,14 +43,30 @@ public class ToyyibPayService(IConfiguration _configuration, IHttpClientFactory 
 
     public string GetCategoryCode(string planName)
     {
-        return planName.ToLower() switch
+        var planNameLower = planName.ToLower();
+        
+        // Try exact match first from appsettings
+        var categoryCode = _configuration[$"ToyyibPay:PlanCategoryMapping:{planName}"];
+        if (!string.IsNullOrWhiteSpace(categoryCode))
         {
-            var name when name.Contains("season") => _configuration["ToyyibPay:CategoryCodes:Seasonal"] ?? string.Empty,
-            var name when name.Contains("daily") => _configuration["ToyyibPay:CategoryCodes:Daily"] ?? string.Empty,
-            var name when name.Contains("monthly") => _configuration["ToyyibPay:CategoryCodes:Monthly"] ?? string.Empty,
-            var name when name.Contains("weekly") => _configuration["ToyyibPay:CategoryCodes:Weekly"] ?? string.Empty,
-            _ => string.Empty
-        };
+            return categoryCode;
+        }
+
+        // Fall back to keyword matching if no exact match
+        var section = _configuration.GetSection("ToyyibPay:KeywordMapping");
+        if (section.Exists())
+        {
+            foreach (var child in section.GetChildren())
+            {
+                var keyword = child.Key.ToLower();
+                if (planNameLower.Contains(keyword))
+                {
+                    return child.Value ?? string.Empty;
+                }
+            }
+        }
+
+        return string.Empty;
     }
 
     public RequestToyyibPay BuildRequest(
@@ -67,9 +83,16 @@ public class ToyyibPayService(IConfiguration _configuration, IHttpClientFactory 
     {
         var emailContent = $"Thank you for purchasing {plan.Name}! Your redemption key: {key.LicenseKey}";
 
-        if (string.IsNullOrWhiteSpace(categoryCode)) { throw new ArgumentException("ToyyibPay category code must be provided and cannot be empty.", nameof(categoryCode)); }
+        if (string.IsNullOrWhiteSpace(categoryCode)) 
+        { 
+            throw new ArgumentException("ToyyibPay category code must be provided and cannot be empty.", nameof(categoryCode)); 
+        }
+        
         var userSecretKey = _configuration["ToyyibPay:UserSecretKey"];
-        if (string.IsNullOrWhiteSpace(userSecretKey)) { throw new InvalidOperationException("ToyyibPay configuration is missing or invalid: 'ToyyibPay:UserSecretKey' must be configured."); }
+        if (string.IsNullOrWhiteSpace(userSecretKey)) 
+        { 
+            throw new InvalidOperationException("ToyyibPay configuration is missing or invalid: 'ToyyibPay:UserSecretKey' must be configured."); 
+        }
 
         return new RequestToyyibPay
         {

@@ -14,6 +14,7 @@ export default function PlansPage() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     loadPlans();
@@ -30,21 +31,49 @@ export default function PlansPage() {
     }
   }
 
+  async function handleRefreshActivation() {
+    setIsRefreshing(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+    try {
+      await planService.refreshActivation();
+      setSuccessMessage('Plan activation status refreshed successfully!');
+      await loadPlans();
+    } catch (error) {
+      setErrorMessage('Failed to refresh plan activation.');
+      console.error(error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }
+
   if (loading) return <LoadingSpinner />;
 
   return (
     <div className="max-w-6xl mx-auto animate-slide-up">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-sm-text-light">Available Plans</h1>
-        <button
-          onClick={() => router.push('/plans/create')}
-          className="flex items-center gap-2 bg-sm-primary text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
-        >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-          Create New Plan
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleRefreshActivation}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors disabled:opacity-50"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7 7 0 0111.946 1.746c.122.32-.066.647-.388.747A1 1 0 0116 8a6 6 0 10-9.75 5.468V17a1 1 0 11-2 0V3a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            {isRefreshing ? 'Refreshing...' : 'Refresh Activation'}
+          </button>
+          <button
+            onClick={() => router.push('/plans/create')}
+            className="flex items-center gap-2 bg-sm-primary text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+            </svg>
+            Create New Plan
+          </button>
+        </div>
       </div>
 
       {errorMessage && (
