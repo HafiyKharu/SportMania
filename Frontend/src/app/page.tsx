@@ -19,6 +19,7 @@ export default function HomePage() {
   const [phoneNumber, setPhone] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState('');
+  const [formErrors, setFormErrors] = useState<{ email?: string; phoneNumber?: string }>({});
 
   useEffect(() => {
     loadPlans();
@@ -41,6 +42,7 @@ export default function HomePage() {
     setEmail('');
     setPhone('');
     setSubmissionError('');
+    setFormErrors({});
     setShowModal(true);
   }
 
@@ -50,17 +52,42 @@ export default function HomePage() {
     setEmail('');
     setPhone('');
     setSubmissionError('');
+    setFormErrors({});
   }
 
   async function handleSubscription(e: React.FormEvent) {
     e.preventDefault();
-    if (!selectedPlan || !email || !phoneNumber) return;
+    if (!selectedPlan) return;
 
     setIsSubmitting(true);
     setSubmissionError('');
+    setFormErrors({});
+
+    const trimmedEmail = email.trim();
+    const trimmedPhone = phoneNumber.trim();
+    const errors: { email?: string; phoneNumber?: string } = {};
+
+    if (!trimmedEmail) {
+      errors.email = 'Email is required.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      errors.email = 'Enter a valid email address.';
+    }
+
+    if (!trimmedPhone) {
+      errors.phoneNumber = 'Phone number is required.';
+    } else if (!/^\+?\d{8,15}$/.test(trimmedPhone.replace(/[\s-]/g, ''))) {
+      errors.phoneNumber = 'Enter a valid phone number.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      setSubmissionError('Please fix the highlighted fields.');
+      setIsSubmitting(false);
+      return;
+    }
 
     try {
-      const result = await transactionService.initiatePayment(email, selectedPlan.planId, phoneNumber);
+      const result = await transactionService.initiatePayment(trimmedEmail, selectedPlan.planId, trimmedPhone);
       if (result.isSuccess && result.redirectUrl) {
         window.open(result.redirectUrl, '_blank');
         toast.success('Payment initiated.');
@@ -180,7 +207,7 @@ export default function HomePage() {
               <button onClick={closeModal} className="text-sm-muted hover:text-sm-text-light text-xl">&times;</button>
             </div>
 
-            <form onSubmit={handleSubscription}>
+            <form onSubmit={handleSubscription} noValidate>
               <div className="mb-4">
                 <label className="block text-sm text-sm-muted mb-1">Email Address</label>
                 <input
@@ -188,9 +215,12 @@ export default function HomePage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary focus:ring-1 focus:ring-sm-primary transition-all duration-200"
+                  className={`w-full px-3 py-2 bg-sm-bg border rounded text-sm-text focus:outline-none focus:border-sm-primary focus:ring-1 focus:ring-sm-primary transition-all duration-200 ${
+                    formErrors.email ? 'border-red-500' : 'border-sm-border'
+                  }`}
                   placeholder="your@email.com"
                 />
+                {formErrors.email && <p className="text-xs text-red-400 mt-1">{formErrors.email}</p>}
               </div>
 
               <div className="mb-4">
@@ -200,9 +230,14 @@ export default function HomePage() {
                   required
                   value={phoneNumber}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary focus:ring-1 focus:ring-sm-primary transition-all duration-200"
+                  className={`w-full px-3 py-2 bg-sm-bg border rounded text-sm-text focus:outline-none focus:border-sm-primary focus:ring-1 focus:ring-sm-primary transition-all duration-200 ${
+                    formErrors.phoneNumber ? 'border-red-500' : 'border-sm-border'
+                  }`}
                   placeholder="+60123456789"
                 />
+                {formErrors.phoneNumber && (
+                  <p className="text-xs text-red-400 mt-1">{formErrors.phoneNumber}</p>
+                )}
               </div>
 
               {submissionError && (
