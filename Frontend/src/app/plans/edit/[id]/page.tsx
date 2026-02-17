@@ -6,6 +6,16 @@ import { planService } from '@/services/planService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { PlanDto } from '@/types';
 
+type FormErrors = {
+  name?: string;
+  description?: string;
+  price?: string;
+  duration?: string;
+  categoryCode?: string;
+  imageUrl?: string;
+  details?: string;
+};
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5235';
 
 export default function PlanEditPage() {
@@ -27,6 +37,7 @@ export default function PlanEditPage() {
   const [errorMessage, setErrorMessage] = useState('');
   const [isUploading, setIsUploading] = useState(false);
   const [uploadMessage, setUploadMessage] = useState('');
+  const [formErrors, setFormErrors] = useState<FormErrors>({});
 
   useEffect(() => {
     loadPlan();
@@ -111,23 +122,55 @@ export default function PlanEditPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setErrorMessage('');
+    setFormErrors({});
 
     try {
+      const trimmedName = name.trim();
+      const trimmedDescription = description.trim();
+      const trimmedCategoryCode = categoryCode.trim();
+      const trimmedPrice = price.trim();
+      const trimmedDuration = duration.trim();
+      const validDetails = details
+        .map((d) => d.value.trim())
+        .filter((v) => v.length > 0);
+
+      const errors: FormErrors = {};
+
+      if (!imageUrl) errors.imageUrl = 'Please select or upload an image.';
+      if (trimmedName.length < 3) errors.name = 'Name must be at least 3 characters.';
+      if (trimmedDescription.length < 10)
+        errors.description = 'Description must be at least 10 characters.';
+      if (trimmedCategoryCode.length === 0)
+        errors.categoryCode = 'Category code is required.';
+      if (!/^\d+(\.\d{1,2})?$/.test(trimmedPrice) || Number(trimmedPrice) <= 0)
+        errors.price = 'Enter a valid price (e.g., 10.00).';
+      if (!/^\d+$/.test(trimmedDuration) || Number(trimmedDuration) <= 0)
+        errors.duration = 'Enter a valid number of days (e.g., 30).';
+      if (validDetails.length === 0)
+        errors.details = 'Please add at least one detail.';
+      if (validDetails.some((d) => d.length < 3))
+        errors.details = 'Each detail must be at least 3 characters.';
+
+      if (Object.keys(errors).length > 0) {
+        setFormErrors(errors);
+        setErrorMessage('Please fix the highlighted fields.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const plan: PlanDto = {
         planId: id,
-        name,
-        description,
-        price,
-        duration,
-        categoryCode,
+        name: trimmedName,
+        description: trimmedDescription,
+        price: trimmedPrice,
+        duration: trimmedDuration,
+        categoryCode: trimmedCategoryCode,
         imageUrl,
-        details: details
-          .filter((d) => d.value.trim())
-          .map((d) => ({
-            planDetailsId: d.planDetailsId,
-            planId: id,
-            value: d.value,
-          }))
+        details: validDetails.map((value) => ({
+          planDetailsId: details.find((d) => d.value.trim() === value)?.planDetailsId ?? crypto.randomUUID(),
+          planId: id,
+          value,
+        })),
       };
 
       await planService.updatePlan(id, plan);
@@ -152,28 +195,40 @@ export default function PlanEditPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-sm-card border border-sm-border rounded-lg p-6">
+      <form onSubmit={handleSubmit} noValidate className="bg-sm-card border border-sm-border rounded-lg p-6">
         <div className="space-y-4">
           <div>
             <label className="block text-sm text-sm-muted mb-1">Name</label>
             <input
               type="text"
               required
+              minLength={3}
+              maxLength={100}
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary"
+              className={`w-full px-3 py-2 bg-sm-bg border rounded text-sm-text focus:outline-none focus:border-sm-primary ${
+                formErrors.name ? 'border-red-500' : 'border-sm-border'
+              }`}
             />
+            {formErrors.name && <p className="text-xs text-red-400 mt-1">{formErrors.name}</p>}
           </div>
 
           <div>
             <label className="block text-sm text-sm-muted mb-1">Description</label>
             <textarea
               required
+              minLength={10}
+              maxLength={1000}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary"
+              className={`w-full px-3 py-2 bg-sm-bg border rounded text-sm-text focus:outline-none focus:border-sm-primary ${
+                formErrors.description ? 'border-red-500' : 'border-sm-border'
+              }`}
               rows={3}
             />
+            {formErrors.description && (
+              <p className="text-xs text-red-400 mt-1">{formErrors.description}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -182,20 +237,33 @@ export default function PlanEditPage() {
               <input
                 type="text"
                 required
+                inputMode="decimal"
+                pattern="^\d+(\.\d{1,2})?$"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary"
+                className={`w-full px-3 py-2 bg-sm-bg border rounded text-sm-text focus:outline-none focus:border-sm-primary ${
+                  formErrors.price ? 'border-red-500' : 'border-sm-border'
+                }`}
               />
+              {formErrors.price && <p className="text-xs text-red-400 mt-1">{formErrors.price}</p>}
+              <p className="text-xs text-sm-muted mt-1">Example: 10.00</p>
             </div>
             <div>
               <label className="block text-sm text-sm-muted mb-1">Duration (days)</label>
               <input
                 type="text"
                 required
+                inputMode="numeric"
+                pattern="^\d+$"
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
-                className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary"
+                className={`w-full px-3 py-2 bg-sm-bg border rounded text-sm-text focus:outline-none focus:border-sm-primary ${
+                  formErrors.duration ? 'border-red-500' : 'border-sm-border'
+                }`}
               />
+              {formErrors.duration && (
+                <p className="text-xs text-red-400 mt-1">{formErrors.duration}</p>
+              )}
             </div>
           </div>
 
@@ -204,13 +272,20 @@ export default function PlanEditPage() {
             <input
               type="text"
               value={categoryCode}
+              required
+              minLength={1}
+              maxLength={50}
               onChange={(e) => setCategoryCode(e.target.value)}
-              placeholder="e.g. TP-ABC123"
-              className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary"
+              placeholder="Enter category code"
+              className={`w-full px-3 py-2 bg-sm-bg border rounded text-sm-text focus:outline-none focus:border-sm-primary ${
+                formErrors.categoryCode ? 'border-red-500' : 'border-sm-border'
+              }`}
             />
+            {formErrors.categoryCode && (
+              <p className="text-xs text-red-400 mt-1">{formErrors.categoryCode}</p>
+            )}
           </div>
 
-          {/* Details */}
           <div>
             <div className="flex justify-between items-center mb-2">
               <label className="text-sm text-sm-muted">Plan Details</label>
@@ -227,8 +302,13 @@ export default function PlanEditPage() {
                 <input
                   type="text"
                   value={detail.value}
+                  required={index === 0}
+                  minLength={3}
+                  maxLength={200}
                   onChange={(e) => updateDetail(index, e.target.value)}
-                  className="flex-1 px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary"
+                  className={`flex-1 px-3 py-2 bg-sm-bg border rounded text-sm-text focus:outline-none focus:border-sm-primary ${
+                    formErrors.details ? 'border-red-500' : 'border-sm-border'
+                  }`}
                   placeholder={`Detail ${index + 1}`}
                 />
                 {details.length > 1 && (
@@ -242,16 +322,18 @@ export default function PlanEditPage() {
                 )}
               </div>
             ))}
+            {formErrors.details && <p className="text-xs text-red-400 mt-1">{formErrors.details}</p>}
           </div>
 
-          {/* Image Section */}
           <div>
             <label className="block text-sm text-sm-muted mb-1">Image</label>
 
             <select
               value={imageUrl}
               onChange={(e) => setImageUrl(e.target.value)}
-              className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary mb-2"
+              className={`w-full px-3 py-2 bg-sm-bg border rounded text-sm-text focus:outline-none focus:border-sm-primary mb-2 ${
+                formErrors.imageUrl ? 'border-red-500' : 'border-sm-border'
+              }`}
             >
               <option value="">Select an image...</option>
               {mediaPaths.map((path) => (
@@ -260,6 +342,7 @@ export default function PlanEditPage() {
                 </option>
               ))}
             </select>
+            {formErrors.imageUrl && <p className="text-xs text-red-400 mb-2">{formErrors.imageUrl}</p>}
 
             <div className="flex items-center gap-3">
               <label className="cursor-pointer px-3 py-2 bg-sm-btn-sec border border-sm-btn-sec-border rounded text-sm text-sm-text-light hover:bg-sm-hover">
