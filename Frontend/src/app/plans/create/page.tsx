@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { planService } from '@/services/planService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { PlanDto, PlanDetailDto } from '@/types';
+import { toast } from 'sonner';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5235';
 
@@ -143,9 +144,11 @@ export default function PlanCreatePage() {
       };
 
       await planService.createPlan(plan);
+      toast.success('Plan created successfully.');
       router.push('/plans');
     } catch {
       setErrorMessage('Failed to create plan. Please try again.');
+      toast.error('Failed to create plan.');
     } finally {
       setIsSubmitting(false);
     }

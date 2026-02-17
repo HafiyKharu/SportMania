@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { transactionService } from '@/services/transactionService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { TransactionDto } from '@/types';
+import { toast } from 'sonner';
 
 export default function PaymentSuccessPage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function PaymentSuccessPage() {
       if (!data) setErrorMessage('Transaction not found.');
     } catch {
       setErrorMessage('Failed to load transaction.');
+      toast.error('Failed to load transaction.');
     } finally {
       setLoading(false);
     }

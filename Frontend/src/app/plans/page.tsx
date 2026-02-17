@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { planService } from '@/services/planService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { PlanDto } from '@/types';
+import { toast } from 'sonner';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5235';
 
@@ -26,6 +27,7 @@ export default function PlansPage() {
       setPlans(data);
     } catch {
       setErrorMessage('Failed to load plans.');
+      toast.error('Failed to load plans.');
     } finally {
       setLoading(false);
     }
@@ -38,9 +40,11 @@ export default function PlansPage() {
     try {
       await planService.refreshActivation();
       setSuccessMessage('Plan activation status refreshed successfully!');
+      toast.success('Plan activation status refreshed.');
       await loadPlans();
     } catch (error) {
       setErrorMessage('Failed to refresh plan activation.');
+      toast.error('Failed to refresh plan activation.');
       console.error(error);
     } finally {
       setIsRefreshing(false);

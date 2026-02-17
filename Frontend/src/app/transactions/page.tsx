@@ -6,6 +6,7 @@ import { transactionService } from '@/services/transactionService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { StatusBadge } from '@/components/StatusBadge';
 import type { TransactionDto } from '@/types';
+import { toast } from 'sonner';
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionDto[]>([]);
@@ -23,6 +24,7 @@ export default function TransactionsPage() {
       setTransactions(data);
     } catch {
       setErrorMessage('Failed to load transactions.');
+      toast.error('Failed to load transactions.');
     } finally {
       setLoading(false);
     }

@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { planService } from '@/services/planService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { PlanDto } from '@/types';
+import { toast } from 'sonner';
 
 type FormErrors = {
   name?: string;
@@ -65,6 +66,7 @@ export default function PlanEditPage() {
       }
     } catch {
       setErrorMessage('Failed to load plan.');
+      toast.error('Failed to load plan.');
     } finally {
       setLoading(false);
     }
@@ -174,10 +176,12 @@ export default function PlanEditPage() {
       };
 
       await planService.updatePlan(id, plan);
+      toast.success('Plan updated successfully.');
       router.push('/plans');
     } catch (error) {
       console.error('Failed to update plan:', error);
       setErrorMessage(`Failed to update plan: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast.error('Failed to update plan.');
     } finally {
       setIsSubmitting(false);
     }

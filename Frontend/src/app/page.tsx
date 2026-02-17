@@ -5,6 +5,7 @@ import { planService } from '@/services/planService';
 import { transactionService } from '@/services/transactionService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { PlanDto } from '@/types';
+import { toast } from 'sonner';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5235';
 
@@ -29,6 +30,7 @@ export default function HomePage() {
       setPlans(data);
     } catch {
       setErrorMessage('Failed to load plans. Please try again later.');
+      toast.error('Failed to load plans.');
     } finally {
       setLoading(false);
     }
@@ -61,12 +63,15 @@ export default function HomePage() {
       const result = await transactionService.initiatePayment(email, selectedPlan.planId, phoneNumber);
       if (result.isSuccess && result.redirectUrl) {
         window.open(result.redirectUrl, '_blank');
+        toast.success('Payment initiated.');
         closeModal();
       } else {
         setSubmissionError(result.error || 'Payment initiation failed.');
+        toast.error(result.error || 'Payment initiation failed.');
       }
     } catch {
       setSubmissionError('An error occurred. Please try again.');
+      toast.error('An error occurred. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

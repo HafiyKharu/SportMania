@@ -6,6 +6,7 @@ import { transactionService } from '@/services/transactionService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { StatusBadge } from '@/components/StatusBadge';
 import type { TransactionDto } from '@/types';
+import { toast } from 'sonner';
 
 export default function TransactionDetailPage() {
   const params = useParams();
@@ -30,6 +31,7 @@ export default function TransactionDetailPage() {
       }
     } catch {
       setErrorMessage('Failed to load transaction.');
+      toast.error('Failed to load transaction.');
     } finally {
       setLoading(false);
     }
@@ -43,6 +45,7 @@ export default function TransactionDetailPage() {
 
   function copyToClipboard(text: string) {
     navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard.');
   }
 
   if (loading) return <LoadingSpinner />;

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { Navbar } from '@/components/Navbar';
 import { AuthGate } from '@/components/AuthGate';
+import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
   title: 'SportMania',
@@ -22,6 +23,7 @@ export default function RootLayout({
             {children}
           </main>
         </AuthGate>
+        <Toaster richColors position="top-right" />
       </body>
     </html>
   );

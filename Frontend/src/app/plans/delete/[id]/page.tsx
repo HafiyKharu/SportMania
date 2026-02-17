@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { planService } from '@/services/planService';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { PlanDto } from '@/types';
+import { toast } from 'sonner';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5235';
 
@@ -29,6 +30,7 @@ export default function PlanDeletePage() {
       if (!data) setErrorMessage('Plan not found.');
     } catch {
       setErrorMessage('Failed to load plan.');
+      toast.error('Failed to load plan.');
     } finally {
       setLoading(false);
     }
@@ -40,9 +42,11 @@ export default function PlanDeletePage() {
 
     try {
       await planService.deletePlan(id);
+      toast.success('Plan deleted.');
       router.push('/plans');
     } catch {
       setErrorMessage('Failed to delete plan.');
+      toast.error('Failed to delete plan.');
     } finally {
       setIsDeleting(false);
     }

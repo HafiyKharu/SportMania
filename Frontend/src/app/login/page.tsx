@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { login } from '@/services/authService';
 import { setAuth } from '@/lib/auth';
+import { toast } from 'sonner';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,9 +21,12 @@ export default function LoginPage() {
     try {
       const result = await login(email, password);
       setAuth(result.token, result.role, result.email);
+      toast.success('Signed in successfully.');
       router.replace(result.role === 'Admin' ? '/plans' : '/');
     } catch (err) {
-      setError((err as Error).message || 'Login failed.');
+      const message = (err as Error).message || 'Login failed.';
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }
