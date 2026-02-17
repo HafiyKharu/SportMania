@@ -187,6 +187,11 @@ export default function PlanEditPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
+      {isSubmitting && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      )}
       <h1 className="text-3xl font-bold text-sm-text-light mb-6">Edit Plan</h1>
 
       {errorMessage && (

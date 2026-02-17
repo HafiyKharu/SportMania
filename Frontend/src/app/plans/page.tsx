@@ -51,6 +51,11 @@ export default function PlansPage() {
 
   return (
     <div className="max-w-6xl mx-auto animate-slide-up">
+      {isRefreshing && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      )}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-sm-text-light">Available Plans</h1>
         <div className="flex gap-2">

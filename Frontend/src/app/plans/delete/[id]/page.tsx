@@ -66,6 +66,11 @@ export default function PlanDeletePage() {
 
   return (
     <div className="max-w-3xl mx-auto">
+      {isDeleting && (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      )}
       <h1 className="text-3xl font-bold text-sm-text-light mb-6">Delete Plan</h1>
 
       <div className="bg-yellow-500/10 border border-yellow-500 text-yellow-300 px-4 py-3 rounded mb-6">
