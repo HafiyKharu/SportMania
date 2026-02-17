@@ -18,13 +18,27 @@ public class TransactionService(
         try
         {
             var guildIdString = _configuration["Discord:DefaultGuildId"] ?? throw new Exception("Default Guild ID not configured. Please set 'Discord:DefaultGuildId' in appsetting.");
-            if (req.Email == null || req.PhoneNumber == null) throw new Exception("Email or Phone Number is Null, Please insert the value.");
+            if (string.IsNullOrWhiteSpace(req.Email) || string.IsNullOrWhiteSpace(req.PhoneNumber))
+                throw new Exception("Email or Phone Number is empty.");
 
-            // Create pending transaction
+            var customer = await _customerRepository.GetCustomerByEmailAsync(req.Email);
+            if (customer == null)
+            {
+                customer = await _customerRepository.CreateCustomerAsync(new Customer
+                {
+                    Email = req.Email,
+                    PhoneNumber = req.PhoneNumber
+                });
+            }
+            else if (string.IsNullOrWhiteSpace(customer.PhoneNumber))
+            {
+                customer.PhoneNumber = req.PhoneNumber;
+                await _customerRepository.UpdateCustomerAsync(customer);
+            }
+
             var transaction = new Transaction
             {
-                Customer = await _customerRepository.GetCustomerByEmailAsync(req.Email)
-                           ?? await _customerRepository.CreateCustomerAsync(new Customer { Email = req.Email }),
+                Customer = customer,
                 Plan = await _planRepository.GetByIdAsync(req.PlanId) ?? throw new Exception("Plan not found."),
                 PaymentStatus = "Pending",
             };
