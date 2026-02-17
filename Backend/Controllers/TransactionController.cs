@@ -8,22 +8,8 @@ namespace SportMania.Controllers;
 
 [ApiController]
 [Route("api/transactions")]
-public class TransactionController : ControllerBase
+public class TransactionController (ITransactionService _transactionService, ITransactionRepository _transactionRepository) : ControllerBase
 {
-    private readonly ITransactionService _transactionService;
-    private readonly IPlanRepository _planRepository;
-    private readonly ITransactionRepository _transactionRepository;
-
-    public TransactionController(
-        ITransactionService transactionService,
-        IPlanRepository planRepository,
-        ITransactionRepository transactionRepository)
-    {
-        _transactionService = transactionService;
-        _planRepository = planRepository;
-        _transactionRepository = transactionRepository;
-    }
-
     [HttpPost("initiate-payment")]
     [AllowAnonymous]
     public async Task<IActionResult> InitiatePayment([FromBody] RequestInitiatePayment req)

@@ -5,28 +5,21 @@ using SportMania.Repository.Interface;
 
 namespace SportMania.Repository;
 
-public class PlanRepository : IPlanRepository
+public class PlanRepository (ApplicationDbContext _context, IPlanDetailsRepository _detailsRepository) : IPlanRepository
 {
-    private readonly ApplicationDbContext _db;
-    private readonly IPlanDetailsRepository _detailsRepository;
-
-    public PlanRepository(ApplicationDbContext db, IPlanDetailsRepository detailsRepository)
-    {
-        _db = db;
-        _detailsRepository = detailsRepository;
-    }
-
     public async Task<Plan?> GetByIdAsync(Guid id)
     {
-        return await _db.Plans
+        return await _context.Plans
             .Include(p => p.Details)
             .FirstOrDefaultAsync(p => p.PlanId == id);
     }
 
     public async Task<IEnumerable<Plan>> GetAllAsync()
     {
-        return await _db.Plans.AsNoTracking()
+        return await _context.Plans.AsNoTracking()
             .Include(p => p.Details)
+            .Where(p => !p.IsDeleted)
+            .Where(p => !string.IsNullOrEmpty(p.CategoryCode))
             .AsNoTracking()
             .ToListAsync();
     }
@@ -39,22 +32,22 @@ public class PlanRepository : IPlanRepository
             .Select(d => new PlanDetails { PlanDetailsId = Guid.NewGuid(), Value = d.Value })
             .ToList();
 
-        await _db.Plans.AddAsync(plan);
-        await _db.SaveChangesAsync();
+        await _context.Plans.AddAsync(plan);
+        await _context.SaveChangesAsync();
     }
 
     public async Task UpdateAsync(Plan plan)
     {
-        var existing = await _db.Plans.FindAsync(plan.PlanId);
+        var existing = await _context.Plans.FindAsync(plan.PlanId);
         if (existing == null) return;
 
         // 1. Update scalar properties of the Plan
-        _db.Entry(existing).CurrentValues.SetValues(plan);
+        _context.Entry(existing).CurrentValues.SetValues(plan);
 
         // 2. Delegate Details management to its own repository
         await _detailsRepository.UpsertForPlanAsync(plan.PlanId, plan.Details);
 
-        await _db.SaveChangesAsync();
+        await _context.SaveChangesAsync();
     }
 
     public async Task DeleteAsync(Guid id)
@@ -62,13 +55,14 @@ public class PlanRepository : IPlanRepository
         var plan = await GetByIdAsync(id);
         if (plan != null)
         {
-            _db.Plans.Remove(plan);
-            await _db.SaveChangesAsync();
+            plan.IsDeleted = true;
+            plan.DeletedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
         }
     }
 
     public async Task<bool> ExistsAsync(Guid id)
     {
-        return await _db.Plans.AnyAsync(p => p.PlanId == id);
+        return await _context.Plans.AnyAsync(p => p.PlanId == id && !p.IsDeleted);
     }
 }

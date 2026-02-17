@@ -5,15 +5,8 @@ namespace SportMania.Controllers;
 
 [ApiController]
 [Route("api/payments")]
-public class PaymentController : ControllerBase
+public class PaymentController (ITransactionRepository _transactionRepository) : ControllerBase
 {
-    private readonly ITransactionRepository _transactionRepository;
-
-    public PaymentController(ITransactionRepository transactionRepository)
-    {
-        _transactionRepository = transactionRepository;
-    }
-
     [HttpGet("complete/{transactionId:guid}")]
     public async Task<IActionResult> PaymentComplete(Guid transactionId)
     {

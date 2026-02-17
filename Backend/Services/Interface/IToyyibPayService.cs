@@ -6,7 +6,6 @@ namespace SportMania.Services.Interface
     public interface IToyyibPayService
     {
         Task<(bool IsSuccess, string Result)> CreateBillAsync(RequestToyyibPay request);
-        string GetCategoryCode(string planName);
         RequestToyyibPay BuildRequest(
             string categoryCode,
             string billName,

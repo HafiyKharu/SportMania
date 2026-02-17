@@ -42,7 +42,7 @@ public class TransactionService(
             var createdTransaction = await _transactionRepository.CreateTransactionAsync(transaction);
 
             // Prepare ToyyibPay request
-            var categoryCode = _toyyibPayService.GetCategoryCode(transaction.Plan.Name);
+            var categoryCode = transaction.Plan.CategoryCode;
             var finalReturnUrl = $"{returnUrl}?transactionId={createdTransaction.TransactionId}";
             var billAmount = ConvertPriceToCents(transaction.Plan.Price);
 

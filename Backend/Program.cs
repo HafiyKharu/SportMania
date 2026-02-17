@@ -75,7 +75,6 @@ builder.Services.AddScoped<IPlanRoleMappingRepository, PlanRoleMappingRepository
 builder.Services.AddScoped<IKeyService, KeyService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IToyyibPayService, ToyyibPayService>();
-builder.Services.AddScoped<PlanActivationService>();
 
 // Conditionally register Discord bot services
 if (builder.Configuration.GetValue<bool>("DiscordBot:Enabled"))

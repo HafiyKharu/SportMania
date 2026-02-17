@@ -5,16 +5,8 @@ using SportMania.Repository.Interface;
 
 namespace SportMania.Repository;
 
-public class PlanRoleMappingRepository : IPlanRoleMappingRepository
-{
-    private readonly ApplicationDbContext _context;
-
-    public PlanRoleMappingRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
-    public async Task<PlanRoleMapping?> GetByGuildAndPlanAsync(ulong guildId, Guid planId)
+public class PlanRoleMappingRepository (ApplicationDbContext _context) : IPlanRoleMappingRepository
+{    public async Task<PlanRoleMapping?> GetByGuildAndPlanAsync(ulong guildId, Guid planId)
     {
         return await _context.Set<PlanRoleMapping>()
             .Include(m => m.Plan)

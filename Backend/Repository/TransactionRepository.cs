@@ -5,15 +5,8 @@ using SportMania.Repository.Interface;
 
 namespace SportMania.Repository;
 
-public class TransactionRepository : ITransactionRepository
+public class TransactionRepository (ApplicationDbContext _context) : ITransactionRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public TransactionRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
     public async Task<Transaction> CreateTransactionAsync(Transaction transaction)
     {
         transaction.TransactionId = Guid.NewGuid();

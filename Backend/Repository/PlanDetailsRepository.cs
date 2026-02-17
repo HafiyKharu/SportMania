@@ -5,22 +5,15 @@ using SportMania.Repository.Interface;
 
 namespace SportMania.Repository;
 
-public class PlanDetailsRepository : IPlanDetailsRepository
-{
-    private readonly ApplicationDbContext _db;
-
-    public PlanDetailsRepository(ApplicationDbContext db)
-    {
-        _db = db;
-    }
-
+public class PlanDetailsRepository (ApplicationDbContext _context) : IPlanDetailsRepository
+{    
     public async Task UpsertForPlanAsync(Guid planId, IEnumerable<PlanDetails> incomingDetails)
     {
         var validIncoming = incomingDetails
             .Where(d => !string.IsNullOrWhiteSpace(d.Value))
             .ToList();
 
-        var existingDetails = await _db.PlanDetails
+        var existingDetails = await _context.PlanDetails
             .Where(d => d.PlanId == planId)
             .ToListAsync();
 
@@ -31,7 +24,7 @@ public class PlanDetailsRepository : IPlanDetailsRepository
 
         if (detailsToRemove.Any())
         {
-            _db.PlanDetails.RemoveRange(detailsToRemove);
+            _context.PlanDetails.RemoveRange(detailsToRemove);
         }
 
         // 2. Update existing or add new details
@@ -46,7 +39,7 @@ public class PlanDetailsRepository : IPlanDetailsRepository
             else
             {
                 // Add new
-                await _db.PlanDetails.AddAsync(new PlanDetails
+                await _context.PlanDetails.AddAsync(new PlanDetails
                 {
                     PlanDetailsId = incoming.PlanDetailsId == Guid.Empty ? Guid.NewGuid() : incoming.PlanDetailsId,
                     Value = incoming.Value,
@@ -54,5 +47,6 @@ public class PlanDetailsRepository : IPlanDetailsRepository
                 });
             }
         }
+        await _context.SaveChangesAsync();
     }
 }

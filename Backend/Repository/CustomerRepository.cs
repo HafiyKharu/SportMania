@@ -5,15 +5,8 @@ using SportMania.Repository.Interface;
 
 namespace SportMania.Repository;
 
-public class CustomerRepository : ICustomerRepository
+public class CustomerRepository (ApplicationDbContext _context) : ICustomerRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public CustomerRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
     public async Task<Customer> CreateCustomerAsync(Customer customer)
     {
         customer.CustomerId = Guid.NewGuid();

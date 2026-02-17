@@ -5,15 +5,8 @@ using SportMania.Repository.Interface;
 
 namespace SportMania.Repository;
 
-public class KeyRepository : IKeyRepository
+public class KeyRepository (ApplicationDbContext _context) : IKeyRepository
 {
-    private readonly ApplicationDbContext _context;
-
-    public KeyRepository(ApplicationDbContext context)
-    {
-        _context = context;
-    }
-
     public async Task<Key> CreateAsync(Key key)
     {
         await _context.Keys.AddAsync(key);

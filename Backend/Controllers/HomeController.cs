@@ -7,11 +7,8 @@ namespace SportMania.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class HomeController : ControllerBase
+public class HomeController (ApplicationDbContext _db) : ControllerBase
 {
-    private readonly ApplicationDbContext _db;
-    public HomeController(ApplicationDbContext db) => _db = db;
-
     [HttpGet("plans")]
     public async Task<ActionResult<IEnumerable<Plan>>> GetPlans()
     {

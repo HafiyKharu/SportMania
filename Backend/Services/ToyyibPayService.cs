@@ -41,34 +41,6 @@ public class ToyyibPayService(IConfiguration _configuration, IHttpClientFactory 
         }
     }
 
-    public string GetCategoryCode(string planName)
-    {
-        var planNameLower = planName.ToLower();
-        
-        // Try exact match first from appsettings
-        var categoryCode = _configuration[$"ToyyibPay:PlanCategoryMapping:{planName}"];
-        if (!string.IsNullOrWhiteSpace(categoryCode))
-        {
-            return categoryCode;
-        }
-
-        // Fall back to keyword matching if no exact match
-        var section = _configuration.GetSection("ToyyibPay:KeywordMapping");
-        if (section.Exists())
-        {
-            foreach (var child in section.GetChildren())
-            {
-                var keyword = child.Key.ToLower();
-                if (planNameLower.Contains(keyword))
-                {
-                    return child.Value ?? string.Empty;
-                }
-            }
-        }
-
-        return string.Empty;
-    }
-
     public RequestToyyibPay BuildRequest(
         string categoryCode,
         string billName,
