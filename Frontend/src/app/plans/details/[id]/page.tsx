@@ -74,6 +74,13 @@ export default function PlanDetailsPage() {
               <span className="text-sm-muted">/ {plan.duration} days</span>
             </div>
 
+            {plan.categoryCode && (
+              <div className="mb-4">
+                <span className="text-sm text-sm-muted">Category Code:</span>
+                <span className="ml-2 text-sm text-sm-text">{plan.categoryCode}</span>
+              </div>
+            )}
+
             {plan.details && plan.details.length > 0 && (
               <div className="mb-6">
                 <h3 className="text-sm font-semibold text-sm-text-light mb-2">What&apos;s Included</h3>

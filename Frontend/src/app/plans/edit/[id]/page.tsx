@@ -17,6 +17,7 @@ export default function PlanEditPage() {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [duration, setDuration] = useState('');
+  const [categoryCode, setCategoryCode] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [details, setDetails] = useState<{ planDetailsId: string; value: string }[]>([]);
   const [createdAt, setCreatedAt] = useState<string | null>(null);
@@ -40,8 +41,8 @@ export default function PlanEditPage() {
         setDescription(plan.description);
         setPrice(plan.price);
         setDuration(plan.duration);
+        setCategoryCode(plan.categoryCode ?? '');
         setImageUrl(plan.imageUrl);
-        setCreatedAt(plan.createdAt);
         setDetails(
           plan.details.map((d) => ({
             planDetailsId: d.planDetailsId,
@@ -118,6 +119,7 @@ export default function PlanEditPage() {
         description,
         price,
         duration,
+        categoryCode,
         imageUrl,
         details: details
           .filter((d) => d.value.trim())
@@ -125,9 +127,7 @@ export default function PlanEditPage() {
             planDetailsId: d.planDetailsId,
             planId: id,
             value: d.value,
-          })),
-        createdAt,
-        isDeleted: false,
+          }))
       };
 
       await planService.updatePlan(id, plan);
@@ -197,6 +197,17 @@ export default function PlanEditPage() {
                 className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary"
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm text-sm-muted mb-1">Category Code</label>
+            <input
+              type="text"
+              value={categoryCode}
+              onChange={(e) => setCategoryCode(e.target.value)}
+              placeholder="e.g. TP-ABC123"
+              className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary"
+            />
           </div>
 
           {/* Details */}

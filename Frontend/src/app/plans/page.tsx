@@ -55,16 +55,6 @@ export default function PlansPage() {
         <h1 className="text-3xl font-bold text-sm-text-light">Available Plans</h1>
         <div className="flex gap-2">
           <button
-            onClick={handleRefreshActivation}
-            disabled={isRefreshing}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors disabled:opacity-50"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7 7 0 0111.946 1.746c.122.32-.066.647-.388.747A1 1 0 0116 8a6 6 0 10-9.75 5.468V17a1 1 0 11-2 0V3a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            {isRefreshing ? 'Refreshing...' : 'Refresh Activation'}
-          </button>
-          <button
             onClick={() => router.push('/plans/create')}
             className="flex items-center gap-2 bg-sm-primary text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
           >

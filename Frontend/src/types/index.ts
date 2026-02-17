@@ -5,6 +5,7 @@ export interface PlanDto {
   description: string;
   price: string;
   duration: string;
+  categoryCode: string;
   details: PlanDetailDto[];
 }
 

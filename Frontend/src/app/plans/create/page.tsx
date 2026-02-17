@@ -14,6 +14,7 @@ export default function PlanCreatePage() {
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
   const [duration, setDuration] = useState('');
+  const [categoryCode, setCategoryCode] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [details, setDetails] = useState<{ value: string }[]>([{ value: '' }]);
   const [mediaPaths, setMediaPaths] = useState<string[]>([]);
@@ -80,6 +81,12 @@ export default function PlanCreatePage() {
     setErrorMessage('');
 
     try {
+      if (!imageUrl) {
+        setErrorMessage('Please select or upload an image.');
+        setIsSubmitting(false);
+        return;
+      }
+
       const planId = crypto.randomUUID();
       const plan: PlanDto = {
         planId,
@@ -87,6 +94,7 @@ export default function PlanCreatePage() {
         description,
         price,
         duration,
+        categoryCode,
         imageUrl,
         details: details
           .filter((d) => d.value.trim())
@@ -163,6 +171,18 @@ export default function PlanCreatePage() {
             </div>
           </div>
 
+          <div>
+            <label className="block text-sm text-sm-muted mb-1">Category Code</label>
+            <input
+              type="text"
+              value={categoryCode}
+              required
+              onChange={(e) => setCategoryCode(e.target.value)}
+              placeholder="e.g. TP-ABC123"
+              className="w-full px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary"
+            />
+          </div>
+
           {/* Details */}
           <div>
             <div className="flex justify-between items-center mb-2">
@@ -180,6 +200,7 @@ export default function PlanCreatePage() {
                 <input
                   type="text"
                   value={detail.value}
+                  required
                   onChange={(e) => updateDetail(index, e.target.value)}
                   className="flex-1 px-3 py-2 bg-sm-bg border border-sm-border rounded text-sm-text focus:outline-none focus:border-sm-primary"
                   placeholder={`Detail ${index + 1}`}
