@@ -1,0 +1,246 @@
+﻿@page "/"
+@inject IPlanService PlanService
+@inject ITransactionService TransactionService
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using BlazorApp.Services
+@rendermode InteractiveServer
+
+<PageTitle>SportMania - Stream Your Favorite Content</PageTitle>
+
+<section class="hero text-center py-5">
+    <div class="container">
+        <h1 class="display-5 fw-bold text-white">Stream Your Favorite </h1>
+        <h1 class="display-5 fw-bold text-gradient">Content Anytime</h1>
+        <p class="lead text-secondary mt-3 mx-auto" style="max-width: 760px;">
+            Get unlimited access to thousands of movies, series, and exclusive content. Choose a plan that fits your
+            lifestyle and start streaming today.
+        </p>
+    </div>
+</section>
+
+<section class="pricing py-4">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-12 mb-4 d-flex justify-content-center align-items-center gap-2">
+                <h2 class="h4 text-light mb-0">Choose Your Plan</h2>
+                <div class="badge bg-dark-subtle text-secondary text-black">Live Mode</div>
+            </div>
+        </div>
+
+        @if (errorMessage != null)
+        {
+            <div class="alert alert-danger" role="alert">
+                @errorMessage
+            </div>
+        }
+
+        @if (plans == null)
+        {
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-secondary mt-3">Loading plans...</p>
+            </div>
+        }
+        else if (plans.Count == 0)
+        {
+            <div class="text-center py-5">
+                <p class="text-secondary">No plans available at the moment.</p>
+            </div>
+        }
+        else
+        {
+            <div class="row g-4 justify-content-center">
+                @foreach (var plan in plans)
+                {
+                    var isPopular = plan.Name.Contains("Monthly", StringComparison.OrdinalIgnoreCase);
+                    <div class="col-12 col-md-4">
+                        <div class="card h-100 bg-black text-center position-relative @(isPopular ? "border-primary" : "")"
+                             style="transition:transform .3s ease, box-shadow .3s ease;">
+
+                            @if (isPopular)
+                            {
+                                <div class="position-absolute start-50 translate-middle-x" style="top:-12px;">
+                                    <span class="badge rounded-pill bg-primary text-white px-3 py-1 small">Most Popular</span>
+                                </div>
+                            }
+
+                            <div class="card-body d-flex flex-column justify-content-between">
+                                <div class="mx-auto mb-3 d-flex align-items-center justify-content-center rounded-circle"
+                                     style="width:56px;height:56px;background-color:rgba(13,110,253,.1);">
+                                    <img src="@plan.ImageUrl" alt="@plan.Name" class="rounded-circle"
+                                         style="width:28px;height:28px;object-fit:cover;" />
+                                </div>
+
+                                <h5 class="card-title h4 fw-semibold text-white">@plan.Name</h5>
+                                <p class="card-text text-secondary mb-3">@plan.Description</p>
+
+                                <div class="mb-3">
+                                    <span class="fs-2 fw-bold text-light">@plan.Price</span>
+                                    <span class="text-secondary">for @plan.Duration days</span>
+                                </div>
+
+                                <ul class="list-unstyled text-start mx-3">
+                                    @foreach (var d in plan.Details)
+                                    {
+                                        <li class="d-flex align-items-center gap-2 mb-2">
+                                            <svg class="text-primary flex-shrink-0" style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            <span class="small text-secondary">@d.Value</span>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+
+                            <div class="card-footer text-muted bg-transparent border-0 py-4">
+                                <button class="btn w-100 @(isPopular ? "btn-primary" : "btn-secondary")"
+                                        @onclick="() => OpenSubscriptionModal(plan)">
+                                    Subscribe Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@if (showModal)
+{
+    <div class="modal fade show d-block" id="emailModal" tabindex="-1" aria-labelledby="emailModalLabel" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content bg-black border-secondary">
+                <div class="modal-header">
+                    <h5 class="modal-title text-white" id="emailModalLabel">Subscribe to <span class="text-primary">@selectedPlan?.Name</span></h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CloseModal" aria-label="Close"></button>
+                </div>
+                <EditForm Model="subscriptionForm" OnValidSubmit="HandleSubscription">
+                    <DataAnnotationsValidator />
+                    <div class="modal-body">
+                        @if (submissionError != null)
+                        {
+                            <div class="alert alert-danger" role="alert">
+                                @submissionError
+                            </div>
+                        }
+                        <div class="mb-3">
+                            <label for="email" class="form-label text-white">Email address</label>
+                            <InputText @bind-Value="subscriptionForm.Email" class="form-control" id="email" placeholder="you@example.com" />
+                            <ValidationMessage For="@(() => subscriptionForm.Email)" class="text-danger" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone" class="form-label text-white">Phone Number</label>
+                            <InputText @bind-Value="subscriptionForm.Phone" class="form-control" id="phone" placeholder="0123456789" />
+                            <ValidationMessage For="@(() => subscriptionForm.Phone)" class="text-danger" />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @onclick="CloseModal" disabled="@isSubmitting">Close</button>
+                        <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                <span>Processing...</span>
+                            }
+                            else
+                            {
+                                <span>Proceed to Payment</span>
+                            }
+                        </button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<PlanDto>? plans;
+    private PlanDto? selectedPlan;
+    private bool showModal = false;
+    private bool isSubmitting = false;
+    private string? errorMessage;
+    private string? submissionError;
+    private SubscriptionFormModel subscriptionForm = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            plans = await PlanService.GetAllPlansAsync();
+            errorMessage = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading plans: {ex.Message}";
+            Console.WriteLine($"Error: {ex}");
+        }
+    }
+
+    private void OpenSubscriptionModal(PlanDto plan)
+    {
+        selectedPlan = plan;
+        subscriptionForm = new SubscriptionFormModel();
+        submissionError = null;
+        showModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+        selectedPlan = null;
+        submissionError = null;
+    }
+
+    private async Task HandleSubscription()
+    {
+        if (selectedPlan == null) return;
+
+        isSubmitting = true;
+        submissionError = null;
+
+        try
+        {
+            var (isSuccess, redirectUrl, error) = await TransactionService.InitiatePaymentAsync(
+                subscriptionForm.Email,
+                selectedPlan.PlanId,
+                subscriptionForm.Phone
+            );
+
+            if (isSuccess && !string.IsNullOrEmpty(redirectUrl))
+            {
+                // Redirect to payment gateway
+                await JS.InvokeVoidAsync("open", redirectUrl, "_blank");
+                CloseModal();
+            }
+            else
+            {
+                submissionError = error ?? "Failed to initiate payment. Please try again.";
+            }
+        }
+        catch (Exception ex)
+        {
+            submissionError = $"Error: {ex.Message}";
+            Console.WriteLine($"Payment initiation error: {ex}");
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    public class SubscriptionFormModel
+    {
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email address")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Phone number is required")]
+        [Phone(ErrorMessage = "Invalid phone number")]
+        public string Phone { get; set; } = string.Empty;
+    }
+}

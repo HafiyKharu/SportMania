@@ -1,0 +1,200 @@
+@page "/plans/edit/{Id:guid}"
+@using BlazorApp.Services
+@inject IPlanService PlanService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Edit Plan</PageTitle>
+
+<h2 class="text-light mb-4">Edit Plan</h2>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@if (plan == null)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-secondary mt-3">Loading plan...</p>
+    </div>
+}
+else
+{
+    <EditForm Model="plan" OnValidSubmit="HandleUpdate">
+        <DataAnnotationsValidator />
+
+        <div class="card bg-black text-white border-secondary mb-4">
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="name" class="form-label">Name</label>
+                    <InputText @bind-Value="plan.Name" class="form-control" id="name" />
+                    <ValidationMessage For="@(() => plan.Name)" class="text-danger" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="description" class="form-label">Description</label>
+                    <InputTextArea @bind-Value="plan.Description" class="form-control" id="description" rows="3" />
+                    <ValidationMessage For="@(() => plan.Description)" class="text-danger" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="price" class="form-label">Price</label>
+                        <InputText @bind-Value="plan.Price" class="form-control" id="price" />
+                        <ValidationMessage For="@(() => plan.Price)" class="text-danger" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="duration" class="form-label">Duration</label>
+                        <InputText @bind-Value="plan.Duration" class="form-control" id="duration" />
+                        <ValidationMessage For="@(() => plan.Duration)" class="text-danger" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Details</label>
+                    @for (int i = 0; i < plan.Details.Count; i++)
+                    {
+                        var index = i;
+                        <div class="input-group mb-2">
+                            <input type="text" @bind="plan.Details[index].Value" class="form-control" placeholder="Detail value" />
+                            <button type="button" class="btn btn-outline-danger" @onclick="() => RemoveDetail(index)">Remove</button>
+                        </div>
+                    }
+                    <button type="button" class="btn btn-outline-primary btn-sm mt-2" @onclick="AddDetail">
+                        Add Detail
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <label for="imageUrl" class="form-label">Image</label>
+                    @if (mediaFiles != null && mediaFiles.Count > 0)
+                    {
+                        <select @bind="plan.ImageUrl" class="form-select" id="imageUrl">
+                            <option value="">-- Select an image --</option>
+                            @foreach (var path in mediaFiles)
+                            {
+                                <option value="@path">@path</option>
+                            }
+                        </select>
+                        @if (!string.IsNullOrEmpty(plan.ImageUrl))
+                        {
+                            <div class="mt-2">
+                                <img src="@plan.ImageUrl" alt="Preview" style="max-width: 200px;" class="img-thumbnail" />
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-secondary">Loading media files...</div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary" disabled="@isSubmitting">
+                @if (isSubmitting)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                }
+                Save Changes
+            </button>
+            <button type="button" class="btn btn-outline-secondary" @onclick="Cancel">Cancel</button>
+        </div>
+    </EditForm>
+}
+
+@code {
+    [Parameter]
+    public Guid Id { get; set; }
+
+    private PlanDto? plan;
+    private List<string>? mediaFiles;
+    private string? errorMessage;
+    private bool isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPlan();
+        await LoadMediaFiles();
+    }
+
+    private async Task LoadPlan()
+    {
+        try
+        {
+            plan = await PlanService.GetPlanByIdAsync(Id);
+            if (plan == null)
+            {
+                errorMessage = "Plan not found.";
+            }
+            else if (plan.Details == null || plan.Details.Count == 0)
+            {
+                plan.Details = new List<PlanDetailDto> { new() };
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading plan: {ex.Message}";
+        }
+    }
+
+    private async Task LoadMediaFiles()
+    {
+        try
+        {
+            mediaFiles = await PlanService.GetMediaPathsAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading media files: {ex.Message}");
+        }
+    }
+
+    private void AddDetail()
+    {
+        plan?.Details.Add(new PlanDetailDto { PlanId = Id });
+    }
+
+    private void RemoveDetail(int index)
+    {
+        if (plan != null && plan.Details.Count > 1)
+        {
+            plan.Details.RemoveAt(index);
+        }
+    }
+
+    private async Task HandleUpdate()
+    {
+        if (plan == null) return;
+
+        isSubmitting = true;
+        errorMessage = null;
+
+        try
+        {
+            await PlanService.UpdatePlanAsync(Id, plan);
+            Navigation.NavigateTo("/plans");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error updating plan: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/plans");
+    }
+}

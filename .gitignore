@@ -119,6 +119,5 @@ docker-compose.override.yml
 *.orig
 
 # Images & large binaries (optional – uncomment if generated)
-media/
 uploads/
 Migrations/
