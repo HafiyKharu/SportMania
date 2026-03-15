@@ -1,0 +1,158 @@
+@page "/transactions/failed/{TransactionId:guid}"
+@using BlazorApp.Services
+@inject ITransactionService TransactionService
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+<PageTitle>Payment Failed</PageTitle>
+
+@if (transaction == null)
+{
+    <div class="container text-center py-5">
+        <div class="spinner-border text-danger" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="text-secondary mt-3">Loading transaction details...</p>
+    </div>
+}
+else
+{
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card bg-dark border-danger shadow-lg">
+                    <div class="card-body text-center py-5">
+                        <!-- Failed Icon -->
+                        <div class="mb-4">
+                            <div class="rounded-circle bg-danger bg-opacity-10 d-inline-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="text-danger" viewBox="0 0 16 16">
+                                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1 0-.708.708L7.293 8l-2.647 2.646a.5.5 0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0 .708-.708L8.707 8l2.647-2.646a.5.5 0 0 0-.708-.708L8 7.293 5.354 4.646z"/>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <!-- Title -->
+                        <h2 class="text-danger fw-bold mb-3">Payment Failed</h2>
+                        <p class="text-secondary mb-4">
+                            Unfortunately, your payment could not be processed.<br>
+                            Please try again or contact support if the issue persists.
+                        </p>
+
+                        <!-- Transaction Details -->
+                        <div class="bg-black rounded p-4 mb-4 text-start">
+                            <h6 class="text-secondary mb-3">Transaction Details</h6>
+                            <div class="row mb-2">
+                                <div class="col-5 text-secondary">Transaction ID:</div>
+                                <div class="col-7 text-white text-truncate">
+                                    <small>@transaction.TransactionId</small>
+                                </div>
+                            </div>
+                            @if (transaction.Plan != null)
+                            {
+                                <div class="row mb-2">
+                                    <div class="col-5 text-secondary">Plan:</div>
+                                    <div class="col-7 text-white">@transaction.Plan.Name</div>
+                                </div>
+                                <div class="row mb-2">
+                                    <div class="col-5 text-secondary">Amount:</div>
+                                    <div class="col-7 text-white">@transaction.Amount</div>
+                                </div>
+                            }
+                            <div class="row">
+                                <div class="col-5 text-secondary">Status:</div>
+                                <div class="col-7">
+                                    <span class="badge bg-danger">@transaction.PaymentStatus</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Error Reasons -->
+                        <div class="bg-danger bg-opacity-10 border border-danger rounded p-3 mb-4 text-start">
+                            <h6 class="text-danger mb-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/>
+                                </svg>
+                                Possible Reasons
+                            </h6>
+                            <ul class="text-secondary small mb-0 ps-3">
+                                <li>Insufficient funds in your account</li>
+                                <li>Payment was cancelled by user</li>
+                                <li>Bank declined the transaction</li>
+                                <li>Network or connection issues</li>
+                            </ul>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-danger btn-lg" @onclick="TryAgain">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                                </svg>
+                                Try Again
+                            </button>
+                            <button class="btn btn-outline-secondary" @onclick="GoHome">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16">
+                                    <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293L8.707 1.5ZM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5 5 5Z"/>
+                                </svg>
+                                Back to Home
+                            </button>
+                        </div>
+
+                        <!-- Support Info -->
+                        <div class="mt-4 pt-4 border-top border-secondary">
+                            <p class="text-secondary small mb-1">Need help?</p>
+                            <a href="mailto:support@sportmania.com" class="text-info text-decoration-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16">
+                                    <path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V4Zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1H2Zm13 2.383-4.708 2.825L15 11.105V5.383Zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741ZM1 11.105l4.708-2.897L1 5.383v5.722Z"/>
+                                </svg>
+                                support@sportmania.com
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Guid TransactionId { get; set; }
+
+    private TransactionDto? transaction;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTransaction();
+    }
+
+    private async Task LoadTransaction()
+    {
+        try
+        {
+            transaction = await TransactionService.GetTransactionAsync(TransactionId);
+            
+            if (transaction == null)
+            {
+                errorMessage = "Transaction not found.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading transaction: {ex.Message}";
+            Console.WriteLine($"Error: {ex}");
+        }
+    }
+
+    private void TryAgain()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private void GoHome()
+    {
+        Navigation.NavigateTo("/");
+    }
+}
